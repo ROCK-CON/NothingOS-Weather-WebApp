@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables (never commit real keys)
+.env
+.env.local
+.env.*.local
+
+# Claude Code internal files
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
