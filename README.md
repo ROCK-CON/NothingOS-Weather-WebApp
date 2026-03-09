@@ -1,29 +1,33 @@
 # Nothing Weather
 
-A Nothing OS inspired weather web application built with Next.js 14. Minimal monochrome UI, dot matrix aesthetic, and smooth animations — inspired by the weather app on the Nothing Phone.
-
-![Nothing Weather App](public/icons/icon.svg)
+A Nothing OS–inspired weather web application built with Next.js 14. Minimal monochrome UI, dot matrix aesthetic, live digital clock, and smooth animations — inspired by the weather app on the Nothing Phone.
 
 ## Features
 
-- Current weather conditions with large temperature display
-- 24-hour horizontally scrollable hourly forecast
-- 7-day weekly forecast with temperature range bars
-- City search with quick-select suggestions
-- Geolocation support — auto-loads local weather if permission granted
-- Mock data fallback — works without an API key
-- Loading skeleton UI while fetching data
-- PWA ready — installable on mobile
+- **Live digital clock** — 96px monochrome clock with blinking red colon, updates every second
+- **Current conditions** — Large 96px temperature display with 112px weather icon; "Feels like" and condition description in a clean two-row layout
+- **Sunrise & Sunset card** — Arc SVG showing the sun's current position along its daily path, live daylight duration (`Xh Ym`), and Rise / Set times
+- **24-hour hourly forecast** — Horizontally scrollable glass card; current hour highlighted with a red accent bar
+- **10-day forecast** — Temperature range bars scaled relative to the full 10-day min / max
+- **Weather detail cards** — Six SVG infographic cards: Wind compass, Humidity cylinder, Pressure gauge, Visibility fan lines, Air Quality dot grid
+- **City search** — Type-ahead suggestions with quick-select
+- **Geolocation** — Auto-loads your local weather on first visit if permission is already granted
+- **Light / Dark mode** — Toggle with smooth transition; dark defaults to `#000000`, light to `#f5f5f5`
+- **Mock data fallback** — Fully functional without an API key (Melbourne mock data)
+- **PWA ready** — Installable on mobile via `manifest.json`
+- **Framer Motion animations** — Entrance animations on all cards and data elements
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Animations:** Framer Motion
-- **API:** OpenWeatherMap
-- **HTTP:** Axios
-- **Font:** Space Mono
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v3 |
+| Animations | Framer Motion v11 |
+| Weather API | OpenWeatherMap |
+| HTTP | Axios |
+| Font | Space Mono |
 
 ## Getting Started
 
@@ -69,7 +73,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ### Vercel (Recommended)
 
-1. Push to GitHub (already done)
+1. Push to GitHub
 2. Go to [vercel.com](https://vercel.com) and import the repository
 3. Add `NEXT_PUBLIC_WEATHER_API_KEY` as an environment variable
 4. Deploy
@@ -84,34 +88,59 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ```
 ├── app/
-│   ├── page.tsx          # Main page — weather loading and layout
-│   ├── layout.tsx        # Root layout — fonts and PWA metadata
-│   └── globals.css       # Global styles — dot matrix, glass panels
+│   ├── page.tsx              # Main page — layout, data fetching, CSS Grid structure
+│   ├── layout.tsx            # Root layout — Space Mono font, PWA metadata
+│   └── globals.css           # Global styles — dot matrix, glass morphism panels
 ├── components/
-│   ├── WeatherCard.tsx   # Current weather — temp, stats grid
-│   ├── HourlyForecast.tsx # Scrollable 24-hour forecast
-│   ├── WeeklyForecast.tsx # 7-day forecast with temp bars
-│   ├── WeatherIcon.tsx   # SVG weather icons
-│   ├── LocationSearch.tsx # City search and geolocation
-│   └── LoadingSkeleton.tsx # Shimmer loading states
+│   ├── WeatherCard.tsx       # Temperature (96px) + weather icon (112px) + description
+│   ├── DigitalClock.tsx      # Live 96px clock with blinking red colon
+│   ├── HourlyForecast.tsx    # 24-hour scrollable forecast inside glass card
+│   ├── WeeklyForecast.tsx    # 10-day forecast with relative temperature range bars
+│   ├── WeatherInfoCards.tsx  # SunriseSunsetCard, WeatherDetailsCards, and six
+│   │                         # SVG infographic cards (Wind, Humidity, Pressure,
+│   │                         # Visibility, AirQuality)
+│   ├── WeatherIcon.tsx       # Condition-mapped SVG weather icons
+│   ├── LocationSearch.tsx    # City search with suggestions and geolocation button
+│   ├── ThemeToggle.tsx       # Light / dark mode toggle
+│   └── LoadingSkeleton.tsx   # Shimmer loading states
 ├── lib/
-│   └── weather.ts        # OpenWeatherMap API + mock data
+│   └── weather.ts            # OpenWeatherMap API calls + mock data fallback
 └── public/
-    ├── manifest.json     # PWA manifest
-    └── icons/            # App icons
+    ├── manifest.json         # PWA manifest
+    ├── icons/                # App icons (SVG + PNG)
+    └── weather/              # Weather condition assets
 ```
 
-## Design
+## Layout
 
-Inspired by the Nothing Phone OS aesthetic:
+The desktop layout uses a two-column CSS Grid with three independent sub-rows, each guaranteeing horizontal alignment between left and right columns:
 
-- Background: `#000000`
-- Primary text: `#FFFFFF`
-- Secondary text: `#8A8A8A`
-- Font: Space Mono
-- Dot matrix background pattern
-- Glass morphism panels
+```
+┌─────────────────────────┬─────────────────────────┐
+│  Temperature + Icon     │  Digital Clock          │  ← Header row
+│  Feels like / Desc      │                         │
+├─────────────────────────┼─────────────────────────┤
+│  Sunrise & Sunset       │  Hourly Forecast        │  ← Sub-row 1 (Hourly sets height)
+│  [daylight + arc]       │  [24h scroll]           │
+├─────────────────────────┼─────────────────────────┤
+│  Wind  │  Humidity      │  10-Day Forecast        │  ← Sub-row 2 (natural heights)
+│  Press │  Visibility    │                         │
+│     Air Quality         │                         │
+└─────────────────────────┴─────────────────────────┘
+```
+
+## Design Tokens
+
+| Token | Dark | Light |
+|---|---|---|
+| Background | `#000000` | `#f5f5f5` |
+| Primary text | `#FFFFFF` | `#000000` |
+| Secondary text | `#8A8A8A` | `#555555` |
+| Accent | `#FF3030` | `#FF3030` |
+| Font | Space Mono | Space Mono |
+| Card style | Glass morphism | Glass morphism |
+| Background pattern | Dot matrix | Dot matrix |
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE)
