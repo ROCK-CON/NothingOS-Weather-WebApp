@@ -31,10 +31,10 @@ function HourlyItem({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.4 }}
-      className={`relative flex flex-col items-center gap-3 px-4 py-5 rounded-2xl min-w-[76px] flex-shrink-0 transition-all duration-200 ${
+      className={`relative flex flex-col items-center gap-3 px-4 py-4 rounded-xl min-w-[72px] flex-shrink-0 transition-all duration-200 ${
         isNow
-          ? "bg-black/10 dark:bg-white/10 border border-black/20 dark:border-white/20 shadow-sm"
-          : "bg-black/[0.03] dark:bg-white/5 border border-black/[0.06] dark:border-white/5 hover:bg-black/[0.06] dark:hover:bg-white/10"
+          ? "bg-white/5 dark:bg-white/8"
+          : "hover:bg-black/5 dark:hover:bg-white/5"
       }`}
     >
       {/* Red accent bar for current hour */}
@@ -78,14 +78,14 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.7, duration: 0.5 }}
-      className="w-full"
+      className="glass rounded-2xl p-5 w-full h-full flex flex-col"
     >
-      <h2 className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4">
+      <h2 className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4 flex-shrink-0">
         Hourly Forecast
       </h2>
       <div
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto scroll-hidden pb-2"
+        className="flex gap-1 overflow-x-auto scroll-hidden flex-1 items-center"
         style={{ scrollSnapType: "x mandatory" }}
       >
         {data.slice(0, 24).map((item, i) => (
