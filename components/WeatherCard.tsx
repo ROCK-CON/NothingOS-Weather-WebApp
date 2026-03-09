@@ -9,17 +9,6 @@ interface WeatherCardProps {
   data: WeatherData;
 }
 
-function StatItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[#555555] dark:text-[#8A8A8A] text-xs uppercase tracking-widest">
-        {label}
-      </span>
-      <span className="text-black dark:text-white text-sm font-mono">{value}</span>
-    </div>
-  );
-}
-
 export default function WeatherCard({ data }: WeatherCardProps) {
   return (
     <motion.div
@@ -29,7 +18,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
       className="w-full"
     >
       {/* Main temperature display */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -57,7 +46,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <WeatherIcon condition={data.condition} size={72} />
+          <WeatherIcon condition={data.condition} size={120} />
         </motion.div>
       </div>
 
@@ -66,26 +55,10 @@ export default function WeatherCard({ data }: WeatherCardProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="text-black dark:text-white font-mono text-lg mb-8 tracking-wide uppercase"
+        className="text-black dark:text-white font-mono text-lg mb-6 tracking-wide uppercase"
       >
         {data.description}
       </motion.p>
-
-      {/* Stats grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="glass rounded-2xl p-5 grid grid-cols-2 gap-5"
-      >
-        <StatItem label="Humidity" value={`${data.humidity}%`} />
-        <StatItem label="Wind" value={`${data.windSpeed} km/h`} />
-        <StatItem
-          label="Visibility"
-          value={`${(data.visibility / 1000).toFixed(1)} km`}
-        />
-        <StatItem label="Pressure" value={`${data.pressure} hPa`} />
-      </motion.div>
 
       {/* Infographic cards */}
       <WeatherInfoCards data={data} />

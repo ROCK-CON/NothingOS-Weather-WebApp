@@ -128,11 +128,14 @@ const mockDaily: DailyForecastItem[] = (() => {
     "thunderstorm",
     "clear",
     "partly-cloudy",
+    "rain",
+    "cloudy",
+    "clear",
   ];
-  const icons = ["02d", "10d", "03d", "01d", "11d", "01d", "02d"];
+  const icons = ["02d", "10d", "03d", "01d", "11d", "01d", "02d", "10d", "03d", "01d"];
   const now = new Date();
 
-  return Array.from({ length: 7 }, (_, i) => {
+  return Array.from({ length: 10 }, (_, i) => {
     const date = new Date(now);
     date.setDate(now.getDate() + i);
     return {
@@ -143,7 +146,7 @@ const mockDaily: DailyForecastItem[] = (() => {
       condition: conditions[i],
       icon: icons[i],
       description: conditions[i].replace("-", " "),
-      precipitation: [0, 0.9, 0.4, 0, 0.7, 0, 0.1][i],
+      precipitation: [0, 0.9, 0.4, 0, 0.7, 0, 0.1, 0.6, 0.2, 0][i],
     };
   });
 })();
@@ -299,7 +302,7 @@ export async function getForecast(city: string): Promise<{
     const daily: DailyForecastItem[] = [];
     let i = 0;
     dayMap.forEach((dayItems, key) => {
-      if (daily.length >= 7) return;
+      if (daily.length >= 10) return;
       const temps = dayItems.map(
         (d: { main: { temp: number } }) => d.main.temp
       );
@@ -387,7 +390,7 @@ export async function getForecastByCoords(
     const daily: DailyForecastItem[] = [];
     let i = 0;
     dayMap.forEach((dayItems) => {
-      if (daily.length >= 7) return;
+      if (daily.length >= 10) return;
       const temps = dayItems.map(
         (d: { main: { temp: number } }) => d.main.temp
       );
