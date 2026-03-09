@@ -189,27 +189,27 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start gap-8"
+              className="flex flex-col gap-8"
             >
-              {/* Row 1 left — weather header */}
-              <WeatherCard data={weather} />
+              {/* Header row — temperature left, clock right */}
+              <div className="grid lg:grid-cols-2 lg:items-start gap-8">
+                <WeatherCard data={weather} />
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <DigitalClock />
+                </motion.div>
+              </div>
 
-              {/* Row 1 right — digital clock */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <DigitalClock />
-              </motion.div>
-
-              {/* Row 2 left — infographic cards */}
-              <WeatherInfoCards data={weather} />
-
-              {/* Row 2 right — forecasts */}
-              <div className="flex flex-col gap-8">
-                <HourlyForecast data={hourly} />
-                <WeeklyForecast data={daily} />
+              {/* Cards row — infographics left, forecasts right */}
+              <div className="grid lg:grid-cols-2 lg:items-start gap-8">
+                <WeatherInfoCards data={weather} />
+                <div className="flex flex-col gap-8">
+                  <HourlyForecast data={hourly} />
+                  <WeeklyForecast data={daily} />
+                </div>
               </div>
             </motion.div>
           ) : null}
