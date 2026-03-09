@@ -539,7 +539,7 @@ const AQI_LABELS: Record<number, string> = {
   5: "Very Poor",
 };
 
-export function AirQualityCard({ aqi }: { aqi: number }) {
+export function AirQualityCard({ aqi, className = "" }: { aqi: number; className?: string }) {
   const cols = 10;
   const rows = 4;
   const dotR = 3;
@@ -552,7 +552,7 @@ export function AirQualityCard({ aqi }: { aqi: number }) {
   const litCols = Math.round((aqi / 5) * cols);
 
   return (
-    <InfoCard delay={0.9} className="col-span-2">
+    <InfoCard delay={0.9} className={`col-span-2 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <CardLabel>Air Quality</CardLabel>
         <span
@@ -595,12 +595,19 @@ export function AirQualityCard({ aqi }: { aqi: number }) {
 
 export function WeatherDetailsCards({ data }: { data: WeatherData }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    {/*
+      grid-rows-[auto_auto_1fr]: rows 1 & 2 (Wind/Humidity, Pressure/Visibility) keep
+      their natural heights; row 3 (Air Quality) receives the remaining 1fr so it
+      stretches to the bottom.  h-full fills the grid cell, which CSS Grid has already
+      stretched to match WeeklyForecast height — no circular inflation because only
+      row 3 uses fr (resolved after rows 1 & 2 are sized from their natural content).
+    */}
+    <div className="grid grid-cols-2 grid-rows-[auto_auto_1fr] gap-4 h-full">
       <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
       <HumidityCard humidity={data.humidity} />
       <PressureCard pressure={data.pressure} />
       <VisibilityCard visibility={data.visibility} />
-      <AirQualityCard aqi={data.aqi} />
+      <AirQualityCard aqi={data.aqi} className="h-full" />
     </div>
   );
 }
