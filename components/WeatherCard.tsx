@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import WeatherIcon from "./WeatherIcon";
+import WeatherInfoCards from "./WeatherInfoCards";
 import type { WeatherData } from "@/lib/weather";
 
 interface WeatherCardProps {
@@ -20,14 +21,6 @@ function StatItem({ label, value }: { label: string; value: string }) {
 }
 
 export default function WeatherCard({ data }: WeatherCardProps) {
-  const formatTime = (unix: number) => {
-    return new Date(unix * 1000).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -92,9 +85,10 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           value={`${(data.visibility / 1000).toFixed(1)} km`}
         />
         <StatItem label="Pressure" value={`${data.pressure} hPa`} />
-        <StatItem label="Sunrise" value={formatTime(data.sunrise)} />
-        <StatItem label="Sunset" value={formatTime(data.sunset)} />
       </motion.div>
+
+      {/* Infographic cards */}
+      <WeatherInfoCards data={data} />
     </motion.div>
   );
 }

@@ -12,12 +12,16 @@ export interface WeatherData {
   condition: WeatherCondition;
   humidity: number;
   windSpeed: number;
+  windDeg: number;
   visibility: number;
   pressure: number;
   icon: string;
   sunrise: number;
   sunset: number;
   dt: number;
+  aqi: number;
+  lat: number;
+  lon: number;
 }
 
 export interface HourlyForecastItem {
@@ -73,12 +77,16 @@ const mockCurrentWeather: WeatherData = {
   condition: "partly-cloudy",
   humidity: 58,
   windSpeed: 14,
+  windDeg: 275,
   visibility: 10000,
   pressure: 1015,
   icon: "02d",
   sunrise: Date.now() / 1000 - 3600 * 4,
   sunset: Date.now() / 1000 + 3600 * 4,
   dt: Date.now() / 1000,
+  aqi: 2,
+  lat: -37.8136,
+  lon: 144.9631,
 };
 
 const mockHourly: HourlyForecastItem[] = Array.from({ length: 24 }, (_, i) => {
@@ -170,12 +178,16 @@ export async function getCurrentWeather(city: string): Promise<WeatherData> {
       condition: mapCondition(data.weather[0].id, data.weather[0].icon),
       humidity: data.main.humidity,
       windSpeed: Math.round(data.wind.speed * 3.6),
+      windDeg: data.wind?.deg ?? 0,
       visibility: data.visibility,
       pressure: data.main.pressure,
       icon: data.weather[0].icon,
       sunrise: data.sys.sunrise,
       sunset: data.sys.sunset,
       dt: data.dt,
+      aqi: 1,
+      lat: data.coord.lat,
+      lon: data.coord.lon,
     };
   } catch {
     console.warn("API error – using mock data");
@@ -214,12 +226,16 @@ export async function getCurrentWeatherByCoords(
       condition: mapCondition(data.weather[0].id, data.weather[0].icon),
       humidity: data.main.humidity,
       windSpeed: Math.round(data.wind.speed * 3.6),
+      windDeg: data.wind?.deg ?? 0,
       visibility: data.visibility,
       pressure: data.main.pressure,
       icon: data.weather[0].icon,
       sunrise: data.sys.sunrise,
       sunset: data.sys.sunset,
       dt: data.dt,
+      aqi: 1,
+      lat: data.coord.lat,
+      lon: data.coord.lon,
     };
   } catch {
     return mockCurrentWeather;
