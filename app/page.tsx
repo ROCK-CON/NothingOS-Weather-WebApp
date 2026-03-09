@@ -228,9 +228,11 @@ export default function Home() {
                 </div>
 
                 {/* ── 10-Day forecast ── mobile 4 · desktop col 2, row 3 */}
-                <div className="order-4 lg:col-start-2 lg:row-start-3">
-                  <WeeklyForecast data={daily} />
-                </div>
+                {/* Direct grid child: align-self:stretch fills the row height set by the left column */}
+                <WeeklyForecast
+                  data={daily}
+                  className="order-4 lg:col-start-2 lg:row-start-3"
+                />
 
                 {/* ── Sunrise & Sunset ── mobile 5 · desktop col 1, row 2 */}
                 <div className="order-5 lg:col-start-1 lg:row-start-2">
