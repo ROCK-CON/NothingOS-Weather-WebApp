@@ -17,7 +17,8 @@ export default function WeatherCard({ data }: WeatherCardProps) {
       className="w-full"
     >
       {/* Temperature + Icon row */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between">
+        {/* Left: temperature + feels like */}
         <div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -40,28 +41,24 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           </motion.p>
         </div>
 
-        {/* Icon — right-aligned, matching temperature height */}
+        {/* Right: large icon + description stacked */}
         <motion.div
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex items-center h-[96px]"
+          className="flex flex-col items-end gap-3"
         >
-          <WeatherIcon condition={data.condition} size={80} />
+          <WeatherIcon condition={data.condition} size={100} />
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-black dark:text-white font-mono text-sm tracking-wide uppercase"
+          >
+            {data.description}
+          </motion.span>
         </motion.div>
       </div>
-
-      {/* Description */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mb-6"
-      >
-        <span className="text-black dark:text-white font-mono text-lg tracking-wide uppercase">
-          {data.description}
-        </span>
-      </motion.div>
 
     </motion.div>
   );
