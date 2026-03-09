@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 
-const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
+  const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
   const { searchParams } = new URL(request.url);
   const endpoint = searchParams.get("endpoint");
   const city = searchParams.get("city");
