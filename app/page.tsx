@@ -188,10 +188,10 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col lg:grid lg:grid-cols-2 gap-8"
+              className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start gap-8"
             >
               <WeatherCard data={weather} />
-              <div className="flex flex-col gap-8 lg:h-full">
+              <div className="flex flex-col gap-8">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -200,7 +200,7 @@ export default function Home() {
                   <DigitalClock />
                 </motion.div>
                 <HourlyForecast data={hourly} />
-                <WeeklyForecast data={daily} className="lg:flex-1" />
+                <WeeklyForecast data={daily} />
               </div>
             </motion.div>
           ) : null}
