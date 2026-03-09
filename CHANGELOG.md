@@ -8,6 +8,29 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.7.0] — 2026-03-10
+
+### Added
+- **Temperature Trend graph** — SVG line chart embedded in the 6-Day Forecast card below the forecast rows. Plots smooth cubic bezier curves for daily high and low temperatures, with a shaded band filling the range between them. Floating HTML temperature labels sit above/below each data point (avoiding SVG text distortion from `preserveAspectRatio="none"`). The hottest day's dot is highlighted in `#FF3030` red. Day abbreviations appear on the x-axis; "Today" displays as "NOW".
+- **"TEMPERATURE TREND" section heading** — labelled section break inside the forecast card, styled to match all other card headings (`font-mono uppercase tracking-widest` in muted grey)
+
+### Changed
+- **6-Day Forecast** — forecast rows and temperature trend graph now show Today + 5 days (6 entries). Previously capped at 5 entries (Today + 4 days). Card heading updated from "5-Day Forecast" → "6-Day Forecast"
+
+---
+
+## [0.6.0] — 2026-03-10
+
+### Added
+- **Server-side API proxy** — new Next.js Route Handler at `app/api/weather/route.ts`. All OpenWeatherMap requests are proxied server-side so the API key (`NEXT_PUBLIC_WEATHER_API_KEY`) is never sent to the browser. Accepts `endpoint`, `city`, `lat`, and `lon` query parameters; returns proxied JSON or a structured error response
+
+### Changed
+- **DigitalClock** — now accepts a `timezoneOffset` prop (UTC offset in seconds). When a city is searched, the clock displays that location's local time rather than the user's device time. UTC offset arithmetic: `utcMs + timezoneOffset * 1000`
+- **Weather data layer** (`lib/weather.ts`) — all API calls now route through `/api/weather` instead of calling OpenWeatherMap directly from the browser. Added `timezoneOffset` field to `WeatherData` interface. Added `parseWeatherResponse()` and `parseForecastResponse()` helpers for clean data mapping
+- **Port** changed from 3000 → 5000 (`-p 5000 -H 0.0.0.0`) for Replit compatibility. Dev and start scripts updated in `package.json`
+
+---
+
 ## [0.5.0] — 2026-03-10
 
 ### Fixed
@@ -20,7 +43,7 @@ All notable changes to Nothing Weather are documented here.
 
 ### Added
 - **Mobile-first card ordering** — on narrow screens cards now stack as:
-  Clock → Temperature → Hourly Forecast → 10-Day Forecast → Sunrise & Sunset → Detail cards
+  Clock → Temperature → Hourly Forecast → 6-Day Forecast → Sunrise & Sunset → Detail cards
 
 ### Changed
 - **Unified CSS Grid** — three separate sub-row grids merged into one `grid-cols-1 lg:grid-cols-2` container. Mobile ordering is controlled with CSS `order-*` utilities; desktop layout uses explicit `lg:col-start` / `lg:row-start` placement to reproduce the same 3-row × 2-col alignment as before

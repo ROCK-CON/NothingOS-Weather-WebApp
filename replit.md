@@ -1,30 +1,52 @@
-# Nothing Weather
+# Nothing Weather — Replit Guide
 
-A clean, minimal weather app built with Next.js 14, React, Tailwind CSS, and Framer Motion. Displays current conditions and forecasts using the OpenWeatherMap API.
+A Nothing OS–inspired weather web app built with Next.js 14, TypeScript, Tailwind CSS, and Framer Motion.
 
 ## Stack
 
 - **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion, Lottie React
-- **Data**: OpenWeatherMap API (via `NEXT_PUBLIC_WEATHER_API_KEY` secret)
 - **Language**: TypeScript
+- **Styling**: Tailwind CSS v3
+- **Animations**: Framer Motion v11
+- **Data**: OpenWeatherMap API (proxied server-side)
+- **Font**: Space Mono
 
-## Project Structure
+## Running on Replit
 
-- `app/` - Next.js App Router pages and layouts
-- `components/` - UI components (WeatherCard, HourlyForecast, WeeklyForecast, etc.)
-- `lib/weather.ts` - Weather API utility functions
+The dev server runs on port 5000, bound to `0.0.0.0` for Replit compatibility:
 
-## Running
+```bash
+npm run dev
+```
 
-The dev server runs on port 5000 (`npm run dev`). This is configured for Replit compatibility.
+This is equivalent to `next dev -p 5000 -H 0.0.0.0`.
 
 ## Environment Variables
 
-- `NEXT_PUBLIC_WEATHER_API_KEY` - OpenWeatherMap API key (required, set as a secret)
+Add the following to **Replit Secrets**:
+
+| Secret | Description |
+|---|---|
+| `NEXT_PUBLIC_WEATHER_API_KEY` | Free API key from [openweathermap.org](https://openweathermap.org/api) |
+
+> The app works without an API key — it falls back to mock Melbourne weather data automatically.
+
+## Project Structure
+
+```
+├── app/
+│   ├── api/weather/route.ts  # Server-side OpenWeatherMap proxy (keeps key secret)
+│   ├── page.tsx              # Main page
+│   ├── layout.tsx            # Root layout + PWA metadata
+│   └── globals.css           # Global styles
+├── components/               # All UI components
+├── lib/weather.ts            # API helpers + mock data fallback
+└── public/                   # Icons, PWA manifest
+```
 
 ## Notes
 
-- Migrated from Vercel to Replit — port changed to 5000, host set to 0.0.0.0
+- Port: 5000 (configured for Replit; change to 3000 for standard local dev)
+- API key is read server-side only — never exposed to the browser
+- Mock data (Melbourne) is used automatically if the API key is missing or the request fails
 - Package manager: npm

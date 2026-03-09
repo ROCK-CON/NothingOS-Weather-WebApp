@@ -4,15 +4,17 @@ A Nothing OS–inspired weather web application built with Next.js 14. Minimal m
 
 ## Features
 
-- **Live digital clock** — 96px monochrome clock with blinking red colon, updates every second
+- **Live digital clock** — 96px monochrome clock with blinking red colon, updates every second; shows the searched location's local time
 - **Current conditions** — Large 96px temperature display with 112px weather icon; "Feels like" and condition description in a clean two-row layout
 - **Sunrise & Sunset card** — Arc SVG showing the sun's current position along its daily path, live daylight duration (`Xh Ym`), and Rise / Set times
 - **24-hour hourly forecast** — Horizontally scrollable glass card; current hour highlighted with a red accent bar
-- **10-day forecast** — Temperature range bars scaled relative to the full 10-day min / max
+- **6-day forecast** — Today plus 5 days with temperature range bars scaled to the full period min / max; precipitation indicators
+- **Temperature Trend graph** — Smooth bezier curve SVG chart inside the forecast card; shaded band between high and low lines, floating temperature labels, peak day highlighted in red
 - **Weather detail cards** — Six SVG infographic cards: Wind compass, Humidity cylinder, Pressure gauge, Visibility fan lines, Air Quality dot grid
 - **City search** — Type-ahead suggestions with quick-select
 - **Geolocation** — Auto-loads your local weather on first visit if permission is already granted
 - **Light / Dark mode** — Toggle with smooth transition; dark defaults to `#000000`, light to `#f5f5f5`
+- **Server-side API proxy** — API key is kept server-side via a Next.js Route Handler; never exposed to the browser
 - **Mock data fallback** — Fully functional without an API key (Melbourne mock data)
 - **PWA ready** — Installable on mobile via `manifest.json`
 - **Framer Motion animations** — Entrance animations on all cards and data elements
@@ -61,13 +63,15 @@ cp .env.local.example .env.local
 NEXT_PUBLIC_WEATHER_API_KEY=your_api_key_here
 ```
 
+> The key is only read server-side by the `/api/weather` Route Handler — it is never sent to the browser.
+
 ### 4. Run locally
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:5000](http://localhost:5000)
 
 ## Deployment
 
@@ -82,20 +86,23 @@ Open [http://localhost:3000](http://localhost:3000)
 
 1. Go to [replit.com](https://replit.com) and create a new Repl from the GitHub URL
 2. Add `NEXT_PUBLIC_WEATHER_API_KEY` to Replit Secrets
-3. Set the run command to `npm run dev`
+3. The dev server is pre-configured for Replit on port 5000 (`npm run dev`)
 
 ## Project Structure
 
 ```
 ├── app/
+│   ├── api/
+│   │   └── weather/
+│   │       └── route.ts      # Server-side proxy for OpenWeatherMap API
 │   ├── page.tsx              # Main page — layout, data fetching, CSS Grid structure
 │   ├── layout.tsx            # Root layout — Space Mono font, PWA metadata
 │   └── globals.css           # Global styles — dot matrix, glass morphism panels
 ├── components/
 │   ├── WeatherCard.tsx       # Temperature (96px) + weather icon (112px) + description
-│   ├── DigitalClock.tsx      # Live 96px clock with blinking red colon
+│   ├── DigitalClock.tsx      # Live 96px clock with blinking red colon; timezone-aware
 │   ├── HourlyForecast.tsx    # 24-hour scrollable forecast inside glass card
-│   ├── WeeklyForecast.tsx    # 10-day forecast with relative temperature range bars
+│   ├── WeeklyForecast.tsx    # 6-day forecast with range bars + temperature trend graph
 │   ├── WeatherInfoCards.tsx  # SunriseSunsetCard, WeatherDetailsCards, and six
 │   │                         # SVG infographic cards (Wind, Humidity, Pressure,
 │   │                         # Visibility, AirQuality)
@@ -113,21 +120,25 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Layout
 
-The desktop layout uses a two-column CSS Grid with three independent sub-rows, each guaranteeing horizontal alignment between left and right columns:
+The desktop layout uses a unified two-column CSS Grid. Mobile stacks all cards in a single column with explicit ordering:
 
 ```
 ┌─────────────────────────┬─────────────────────────┐
-│  Temperature + Icon     │  Digital Clock          │  ← Header row
-│  Feels like / Desc      │                         │
+│  Temperature + Icon     │  Digital Clock          │  ← Row 1
+│  Feels like / Desc      │  (location local time)  │
 ├─────────────────────────┼─────────────────────────┤
-│  Sunrise & Sunset       │  Hourly Forecast        │  ← Sub-row 1 (Hourly sets height)
+│  Sunrise & Sunset       │  Hourly Forecast        │  ← Row 2
 │  [daylight + arc]       │  [24h scroll]           │
 ├─────────────────────────┼─────────────────────────┤
-│  Wind  │  Humidity      │  10-Day Forecast        │  ← Sub-row 2 (natural heights)
-│  Press │  Visibility    │                         │
-│     Air Quality         │                         │
+│  Wind  │  Humidity      │  6-Day Forecast         │  ← Row 3
+│  Press │  Visibility    │  [range bars]           │
+│     Air Quality         │  ─────────────────────  │
+│                         │  Temperature Trend      │
+│                         │  [bezier curve graph]   │
 └─────────────────────────┴─────────────────────────┘
 ```
+
+**Mobile order:** Clock → Temperature → Hourly Forecast → 6-Day Forecast → Sunrise & Sunset → Detail cards
 
 ## Design Tokens
 
