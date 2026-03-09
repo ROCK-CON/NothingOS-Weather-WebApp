@@ -605,7 +605,7 @@ export function WeatherDetailsCards({
   // WeatherDetailsCards must be a direct CSS Grid child (no wrapper div) so
   // align-self:stretch gives it a definite height for flex-1 to resolve against.
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
+    <div className={`flex flex-col gap-4 lg:h-full ${className}`}>
       <div className="grid grid-cols-2 gap-4">
         <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
         <HumidityCard humidity={data.humidity} />
