@@ -8,6 +8,14 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.5.0] — 2026-03-10
+
+### Fixed
+- **Air Quality / 10-Day Forecast bottom alignment** — `WeatherDetailsCards` is now a direct CSS Grid child (wrapper div removed). `align-self: stretch` on a direct grid child gives it a definite height, making `flex-1` on the Air Quality card reliably expand to fill all remaining space
+- **WeatherDetailsCards internal layout** — replaced `grid-rows-[auto_auto_1fr]` (unreliable when parent height is implicit) with `flex flex-col`; top two rows are 2-col grids at natural height; Air Quality card uses `flex-1` to consume leftover height
+
+---
+
 ## [0.4.0] — 2026-03-10
 
 ### Added

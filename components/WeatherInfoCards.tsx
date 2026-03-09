@@ -593,16 +593,28 @@ export function AirQualityCard({ aqi, className = "" }: { aqi: number; className
 
 // ─── Details cards (Wind, Humidity, Pressure, Visibility, AQ) ─────────────────
 
-export function WeatherDetailsCards({ data }: { data: WeatherData }) {
-  // grid-rows-[auto_auto_1fr]: rows 1 & 2 keep natural heights; row 3 (AQ) fills remainder.
-  // h-full fills the CSS Grid cell already stretched to WeeklyForecast height.
+export function WeatherDetailsCards({
+  data,
+  className = "",
+}: {
+  data: WeatherData;
+  className?: string;
+}) {
+  // Flex column layout: rows 1 & 2 are 2-col grids at natural height;
+  // AirQuality gets flex-1 so it expands to fill all remaining height.
+  // WeatherDetailsCards must be a direct CSS Grid child (no wrapper div) so
+  // align-self:stretch gives it a definite height for flex-1 to resolve against.
   return (
-    <div className="grid grid-cols-2 grid-rows-[auto_auto_1fr] gap-4 h-full">
-      <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
-      <HumidityCard humidity={data.humidity} />
-      <PressureCard pressure={data.pressure} />
-      <VisibilityCard visibility={data.visibility} />
-      <AirQualityCard aqi={data.aqi} className="h-full" />
+    <div className={`flex flex-col gap-4 ${className}`}>
+      <div className="grid grid-cols-2 gap-4">
+        <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
+        <HumidityCard humidity={data.humidity} />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <PressureCard pressure={data.pressure} />
+        <VisibilityCard visibility={data.visibility} />
+      </div>
+      <AirQualityCard aqi={data.aqi} className="flex-1" />
     </div>
   );
 }
