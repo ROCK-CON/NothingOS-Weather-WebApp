@@ -38,3 +38,8 @@ deploymentTarget = "cloudrun"
 run = ["sh", "-c", "npm run start"]
 build = ["sh", "-c", "npm run build"]
 publicDir = "public"
+
+[userenv]
+
+[userenv.shared]
+NEXT_PUBLIC_WEATHER_API_KEY = "b4f458342d77e2273b38b540294cc74e"
