@@ -40,10 +40,12 @@ export function SunriseSunsetCard({
   sunrise,
   sunset,
   now,
+  className = "",
 }: {
   sunrise: number;
   sunset: number;
   now: number;
+  className?: string;
 }) {
   const fmt = (unix: number) =>
     new Date(unix * 1000).toLocaleTimeString([], {
@@ -68,10 +70,62 @@ export function SunriseSunsetCard({
   const dotVisible = isDaytime;
 
   return (
-    <InfoCard delay={0.65} className="col-span-2">
+    <InfoCard delay={0.65} className={`h-full flex flex-col ${className}`}>
       <CardLabel>Sunrise &amp; Sunset</CardLabel>
-      <div className="flex items-end justify-between">
-        {/* Times */}
+
+      {/* Arc fills all available height, anchored to bottom — scales with card */}
+      <div className="flex-1 flex items-end">
+        <svg viewBox="0 0 260 84" className="w-full block">
+          {/* Horizon line */}
+          <line
+            x1="10"
+            y1="74"
+            x2="250"
+            y2="74"
+            stroke="currentColor"
+            strokeOpacity="0.12"
+            strokeWidth="1"
+          />
+
+          {/* Arc path — dashed */}
+          <path
+            d={`M ${p0.x} ${p0.y} Q ${p1.x} ${p1.y} ${p2.x} ${p2.y}`}
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.15"
+            strokeWidth="1.5"
+            strokeDasharray="4 3"
+          />
+
+          {/* Elapsed arc overlay */}
+          {isDaytime && (
+            <path
+              d={`M ${p0.x} ${p0.y} Q ${p1.x} ${p1.y} ${p2.x} ${p2.y}`}
+              fill="none"
+              stroke={RED}
+              strokeOpacity="0.5"
+              strokeWidth="1.5"
+              strokeDasharray={`${t * 340} 340`}
+            />
+          )}
+
+          {/* Sun dot */}
+          {dotVisible && (
+            <>
+              <circle cx={bx} cy={by} r="7" fill={RED} fillOpacity="0.15" />
+              <circle cx={bx} cy={by} r="4" fill={RED} />
+            </>
+          )}
+
+          {/* Sunrise dot */}
+          <circle cx={p0.x} cy={p0.y} r="3" fill="currentColor" fillOpacity="0.3" />
+          {/* Sunset dot */}
+          <circle cx={p2.x} cy={p2.y} r="3" fill="currentColor" fillOpacity="0.3" />
+        </svg>
+      </div>
+
+      {/* Rise and Set times — below the arc */}
+      <div className="flex items-end justify-between mt-3 pt-3 border-t border-black/5 dark:border-white/5">
         <div className="flex flex-col gap-1">
           <span className="text-[#555555] dark:text-[#8A8A8A] text-[10px] font-mono uppercase tracking-widest">
             Rise
@@ -80,59 +134,6 @@ export function SunriseSunsetCard({
             {fmt(sunrise)}
           </span>
         </div>
-
-        {/* Arc SVG */}
-        <div className="flex-1 px-4">
-          <svg viewBox="0 0 260 84" className="w-full" style={{ maxHeight: 84 }}>
-            {/* Horizon line */}
-            <line
-              x1="10"
-              y1="74"
-              x2="250"
-              y2="74"
-              stroke="currentColor"
-              strokeOpacity="0.12"
-              strokeWidth="1"
-            />
-
-            {/* Arc path — dashed when future, solid when past */}
-            <path
-              d={`M ${p0.x} ${p0.y} Q ${p1.x} ${p1.y} ${p2.x} ${p2.y}`}
-              fill="none"
-              stroke="currentColor"
-              strokeOpacity="0.15"
-              strokeWidth="1.5"
-              strokeDasharray="4 3"
-            />
-
-            {/* Elapsed arc overlay */}
-            {isDaytime && (
-              <path
-                d={`M ${p0.x} ${p0.y} Q ${p1.x} ${p1.y} ${p2.x} ${p2.y}`}
-                fill="none"
-                stroke={RED}
-                strokeOpacity="0.5"
-                strokeWidth="1.5"
-                strokeDasharray={`${t * 340} 340`}
-              />
-            )}
-
-            {/* Sun dot */}
-            {dotVisible && (
-              <>
-                <circle cx={bx} cy={by} r="7" fill={RED} fillOpacity="0.15" />
-                <circle cx={bx} cy={by} r="4" fill={RED} />
-              </>
-            )}
-
-            {/* Sunrise dot */}
-            <circle cx={p0.x} cy={p0.y} r="3" fill="currentColor" fillOpacity="0.3" />
-            {/* Sunset dot */}
-            <circle cx={p2.x} cy={p2.y} r="3" fill="currentColor" fillOpacity="0.3" />
-          </svg>
-        </div>
-
-        {/* Times */}
         <div className="flex flex-col gap-1 items-end">
           <span className="text-[#555555] dark:text-[#8A8A8A] text-[10px] font-mono uppercase tracking-widest">
             Set
@@ -569,6 +570,20 @@ export function AirQualityCard({ aqi }: { aqi: number }) {
         </span>
       </div>
     </InfoCard>
+  );
+}
+
+// ─── Details cards (Wind, Humidity, Pressure, Visibility, AQ) ─────────────────
+
+export function WeatherDetailsCards({ data }: { data: WeatherData }) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
+      <HumidityCard humidity={data.humidity} />
+      <PressureCard pressure={data.pressure} />
+      <VisibilityCard visibility={data.visibility} />
+      <AirQualityCard aqi={data.aqi} />
+    </div>
   );
 }
 

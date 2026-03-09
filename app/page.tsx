@@ -9,7 +9,10 @@ import WeeklyForecast from "@/components/WeeklyForecast";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ThemeToggle from "@/components/ThemeToggle";
 import DigitalClock from "@/components/DigitalClock";
-import WeatherInfoCards from "@/components/WeatherInfoCards";
+import {
+  SunriseSunsetCard,
+  WeatherDetailsCards,
+} from "@/components/WeatherInfoCards";
 import {
   getCurrentWeather,
   getForecast,
@@ -203,13 +206,20 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              {/* Cards row — infographics left, forecasts right */}
+              {/* Cards sub-row 1: Sunrise & Sunset stretches to match Hourly Forecast */}
+              <div className="grid lg:grid-cols-2 gap-8">
+                <SunriseSunsetCard
+                  sunrise={weather.sunrise}
+                  sunset={weather.sunset}
+                  now={weather.dt}
+                />
+                <HourlyForecast data={hourly} />
+              </div>
+
+              {/* Cards sub-row 2: Details left, 10-Day right */}
               <div className="grid lg:grid-cols-2 lg:items-start gap-8">
-                <WeatherInfoCards data={weather} />
-                <div className="flex flex-col gap-8">
-                  <HourlyForecast data={hourly} />
-                  <WeeklyForecast data={daily} />
-                </div>
+                <WeatherDetailsCards data={weather} />
+                <WeeklyForecast data={daily} />
               </div>
             </motion.div>
           ) : null}
