@@ -46,7 +46,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <WeatherIcon condition={data.condition} size={120} />
+          <WeatherIcon condition={data.condition} size={160} />
         </motion.div>
       </div>
 
