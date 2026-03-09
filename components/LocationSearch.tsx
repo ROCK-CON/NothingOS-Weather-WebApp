@@ -56,12 +56,12 @@ export default function LocationSearch({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="text-[#8A8A8A] group-hover:text-white transition-colors"
+            className="text-[#FF3030]"
           >
             <path d="M12 22s-8-6.8-8-13a8 8 0 1116 0c0 6.2-8 13-8 13z" />
             <circle cx="12" cy="9" r="3" />
           </svg>
-          <span className="text-white font-mono text-sm uppercase tracking-widest hover:text-[#8A8A8A] transition-colors">
+          <span className="text-black dark:text-white font-mono text-sm uppercase tracking-widest hover:text-[#555555] dark:hover:text-[#8A8A8A] transition-colors">
             {currentCity}
           </span>
           <svg
@@ -71,7 +71,7 @@ export default function LocationSearch({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className={`text-[#8A8A8A] transition-transform duration-200 ${
+            className={`text-[#555555] dark:text-[#8A8A8A] transition-transform duration-200 ${
               isOpen ? "rotate-180" : ""
             }`}
           >
@@ -84,7 +84,7 @@ export default function LocationSearch({
           whileTap={{ scale: 0.9 }}
           onClick={onGeolocate}
           disabled={isLocating}
-          className="p-2 rounded-xl glass hover:bg-white/10 transition-colors disabled:opacity-50"
+          className="p-2 rounded-xl glass hover:opacity-70 transition-opacity disabled:opacity-50 text-black dark:text-white"
           title="Use current location"
         >
           {isLocating ? (
@@ -93,7 +93,7 @@ export default function LocationSearch({
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="currentColor"
               strokeWidth="2"
               className="animate-spin"
             >
@@ -105,7 +105,7 @@ export default function LocationSearch({
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="currentColor"
               strokeWidth="2"
             >
               <circle cx="12" cy="12" r="3" />
@@ -135,12 +135,12 @@ export default function LocationSearch({
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search city..."
-                className="flex-1 bg-transparent text-white font-mono text-sm placeholder-[#8A8A8A] outline-none border-b border-white/20 pb-1 focus:border-white/50 transition-colors"
+                className="flex-1 bg-transparent text-black dark:text-white font-mono text-sm placeholder-[#888] dark:placeholder-[#8A8A8A] outline-none border-b border-black/20 dark:border-white/20 pb-1 focus:border-black/50 dark:focus:border-white/50 transition-colors"
               />
               <motion.button
                 type="submit"
                 whileTap={{ scale: 0.95 }}
-                className="text-white font-mono text-xs uppercase tracking-widest px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                className="text-black dark:text-white font-mono text-xs uppercase tracking-widest px-3 py-1 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors"
               >
                 Go
               </motion.button>
@@ -157,7 +157,7 @@ export default function LocationSearch({
                       onCityChange(city);
                       setIsOpen(false);
                     }}
-                    className="text-[#8A8A8A] text-xs font-mono px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 hover:text-white transition-colors"
+                    className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors"
                   >
                     {city}
                   </motion.button>

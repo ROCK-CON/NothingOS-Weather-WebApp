@@ -28,10 +28,10 @@ function DayRow({
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.8 + index * 0.05, duration: 0.4 }}
-      className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0"
+      className="flex items-center gap-3 py-3 border-b border-black/5 dark:border-white/5 last:border-0"
     >
       {/* Day name */}
-      <span className="text-white font-mono text-sm w-12 flex-shrink-0 uppercase tracking-wide">
+      <span className="text-black dark:text-white font-mono text-sm w-12 flex-shrink-0 uppercase tracking-wide">
         {item.dayName}
       </span>
 
@@ -41,25 +41,32 @@ function DayRow({
       </div>
 
       {/* Precipitation */}
-      <span className="text-[#8A8A8A] font-mono text-xs w-8 flex-shrink-0 text-right">
-        {item.precipitation > 0 ? `${Math.round(item.precipitation)}%` : ""}
-      </span>
+      <div className="w-10 flex-shrink-0 flex justify-end">
+        {Math.round(item.precipitation) > 0 ? (
+          <span className="flex items-center gap-1 text-[#FF3030] text-[10px] font-mono">
+            <svg width="5" height="7" viewBox="0 0 5 7" fill="currentColor">
+              <path d="M2.5 0C2.5 0 0 3.5 0 4.8C0 6.0 1.1 7 2.5 7C3.9 7 5 6.0 5 4.8C5 3.5 2.5 0 2.5 0Z" />
+            </svg>
+            {Math.round(item.precipitation)}%
+          </span>
+        ) : null}
+      </div>
 
       {/* Temperature bar */}
       <div className="flex-1 flex items-center gap-2">
-        <span className="text-[#8A8A8A] font-mono text-xs w-8 text-right flex-shrink-0">
+        <span className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs w-8 text-right flex-shrink-0">
           {item.low}°
         </span>
-        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+        <div className="flex-1 h-1 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-white/70 rounded-full"
+            className="h-full bg-black/50 dark:bg-white/70 rounded-full"
             style={{
               marginLeft: `${barStart}%`,
               width: `${Math.max(barWidth, 8)}%`,
             }}
           />
         </div>
-        <span className="text-white font-mono text-xs w-8 flex-shrink-0">
+        <span className="text-black dark:text-white font-mono text-xs w-8 flex-shrink-0">
           {item.high}°
         </span>
       </div>
@@ -78,7 +85,7 @@ export default function WeeklyForecast({ data }: WeeklyForecastProps) {
       transition={{ delay: 0.75, duration: 0.5 }}
       className="w-full glass rounded-2xl p-5"
     >
-      <h2 className="text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4">
+      <h2 className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4">
         7-Day Forecast
       </h2>
       <div className="flex flex-col">

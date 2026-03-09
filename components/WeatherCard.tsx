@@ -11,10 +11,10 @@ interface WeatherCardProps {
 function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[#8A8A8A] text-xs uppercase tracking-widest">
+      <span className="text-[#555555] dark:text-[#8A8A8A] text-xs uppercase tracking-widest">
         {label}
       </span>
-      <span className="text-white text-sm font-mono">{value}</span>
+      <span className="text-black dark:text-white text-sm font-mono">{value}</span>
     </div>
   );
 }
@@ -44,16 +44,16 @@ export default function WeatherCard({ data }: WeatherCardProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex items-start"
           >
-            <span className="text-[96px] font-mono font-bold text-white leading-none tracking-tighter">
+            <span className="text-[96px] font-mono font-bold text-black dark:text-white leading-none tracking-tighter">
               {data.temperature}
             </span>
-            <span className="text-3xl font-mono text-[#8A8A8A] mt-4">°C</span>
+            <span className="text-3xl font-mono text-[#555555] dark:text-[#8A8A8A] mt-4">°C</span>
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-[#8A8A8A] font-mono text-sm mt-1"
+            className="text-[#555555] dark:text-[#8A8A8A] font-mono text-sm mt-1"
           >
             Feels like {data.feelsLike}°C
           </motion.p>
@@ -73,7 +73,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="text-white font-mono text-lg mb-8 tracking-wide uppercase"
+        className="text-black dark:text-white font-mono text-lg mb-8 tracking-wide uppercase"
       >
         {data.description}
       </motion.p>

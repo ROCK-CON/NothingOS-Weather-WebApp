@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 function Shimmer({ className }: { className: string }) {
   return (
     <motion.div
-      className={`bg-white/5 rounded-xl ${className}`}
+      className={`bg-black/5 dark:bg-white/5 rounded-xl ${className}`}
       animate={{ opacity: [0.3, 0.6, 0.3] }}
       transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
     />

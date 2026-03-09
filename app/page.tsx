@@ -7,6 +7,7 @@ import WeatherCard from "@/components/WeatherCard";
 import HourlyForecast from "@/components/HourlyForecast";
 import WeeklyForecast from "@/components/WeeklyForecast";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   getCurrentWeather,
   getForecast,
@@ -120,8 +121,8 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-black dot-matrix">
-      <div className="mx-auto max-w-md min-h-screen px-5 py-8 flex flex-col gap-8">
+    <main className="min-h-screen bg-[#f5f5f5] dark:bg-black dot-matrix transition-colors duration-300">
+      <div className="mx-auto max-w-md lg:max-w-4xl min-h-screen px-5 py-8 flex flex-col gap-6">
         {/* Top section */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -129,13 +130,16 @@ export default function Home() {
           transition={{ duration: 0.4 }}
           className="flex flex-col gap-2"
         >
-          <LocationSearch
-            currentCity={city}
-            onCityChange={handleCityChange}
-            onGeolocate={handleGeolocate}
-            isLocating={isLocating}
-          />
-          <p className="text-[#8A8A8A] font-mono text-xs tracking-widest uppercase">
+          <div className="flex items-center justify-between gap-4">
+            <LocationSearch
+              currentCity={city}
+              onCityChange={handleCityChange}
+              onGeolocate={handleGeolocate}
+              isLocating={isLocating}
+            />
+            <ThemeToggle />
+          </div>
+          <p className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase">
             {formatDate(new Date())}
           </p>
         </motion.div>
@@ -147,7 +151,7 @@ export default function Home() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="glass rounded-xl px-4 py-3 text-xs font-mono text-[#8A8A8A] flex items-center gap-2"
+              className="glass rounded-xl px-4 py-3 text-xs font-mono text-[#555555] dark:text-[#8A8A8A] flex items-center gap-2"
             >
               <svg
                 width="14"
@@ -183,11 +187,13 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col gap-8"
+              className="flex flex-col lg:grid lg:grid-cols-2 gap-8"
             >
               <WeatherCard data={weather} />
-              <HourlyForecast data={hourly} />
-              <WeeklyForecast data={daily} />
+              <div className="flex flex-col gap-8">
+                <HourlyForecast data={hourly} />
+                <WeeklyForecast data={daily} />
+              </div>
             </motion.div>
           ) : null}
         </AnimatePresence>
@@ -199,10 +205,10 @@ export default function Home() {
           transition={{ delay: 1.2 }}
           className="mt-auto pt-4 flex items-center justify-between"
         >
-          <span className="text-white/10 font-mono text-[10px] uppercase tracking-widest">
+          <span className="text-black/10 dark:text-white/10 font-mono text-[10px] uppercase tracking-widest">
             Nothing Weather
           </span>
-          <span className="text-white/10 font-mono text-[10px]">
+          <span className="text-black/10 dark:text-white/10 font-mono text-[10px]">
             {weather?.city && `${weather.city}, ${weather.country}`}
           </span>
         </motion.div>

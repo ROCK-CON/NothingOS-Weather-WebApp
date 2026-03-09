@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -15,6 +16,7 @@ const config: Config = {
         primary: "#FFFFFF",
         secondary: "#8A8A8A",
         accent: "#FFFFFF",
+        "accent-red": "#FF3030",
       },
       animation: {
         "fade-in": "fadeIn 0.6s ease-out forwards",
