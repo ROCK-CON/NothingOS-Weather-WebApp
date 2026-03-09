@@ -190,9 +190,9 @@ export default function Home() {
               className="flex flex-col lg:grid lg:grid-cols-2 gap-8"
             >
               <WeatherCard data={weather} />
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-8 lg:h-full">
                 <HourlyForecast data={hourly} />
-                <WeeklyForecast data={daily} />
+                <WeeklyForecast data={daily} className="lg:flex-1" />
               </div>
             </motion.div>
           ) : null}

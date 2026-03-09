@@ -6,6 +6,7 @@ import type { DailyForecastItem } from "@/lib/weather";
 
 interface WeeklyForecastProps {
   data: DailyForecastItem[];
+  className?: string;
 }
 
 function DayRow({
@@ -74,7 +75,7 @@ function DayRow({
   );
 }
 
-export default function WeeklyForecast({ data }: WeeklyForecastProps) {
+export default function WeeklyForecast({ data, className = "" }: WeeklyForecastProps) {
   const maxTemp = Math.max(...data.map((d) => d.high));
   const minTemp = Math.min(...data.map((d) => d.low));
 
@@ -83,7 +84,7 @@ export default function WeeklyForecast({ data }: WeeklyForecastProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.75, duration: 0.5 }}
-      className="w-full glass rounded-2xl p-5"
+      className={`w-full glass rounded-2xl p-5 ${className}`}
     >
       <h2 className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4">
         10-Day Forecast

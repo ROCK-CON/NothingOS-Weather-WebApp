@@ -18,11 +18,8 @@ export default function WeatherCard({ data }: WeatherCardProps) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="w-full"
     >
-      {/* Digital clock */}
-      <DigitalClock />
-
-      {/* Main temperature display */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Temperature + Clock row — horizontally aligned */}
+      <div className="flex items-start justify-between mb-4">
         <div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -45,24 +42,28 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           </motion.p>
         </div>
 
+        {/* Digital clock — right-aligned with temperature */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <WeatherIcon condition={data.condition} size={180} />
+          <DigitalClock />
         </motion.div>
       </div>
 
-      {/* Description */}
-      <motion.p
+      {/* Icon + Description row */}
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="text-black dark:text-white font-mono text-lg mb-6 tracking-wide uppercase"
+        className="flex items-center gap-3 mb-6"
       >
-        {data.description}
-      </motion.p>
+        <WeatherIcon condition={data.condition} size={36} />
+        <span className="text-black dark:text-white font-mono text-lg tracking-wide uppercase">
+          {data.description}
+        </span>
+      </motion.div>
 
       {/* Infographic cards */}
       <WeatherInfoCards data={data} />

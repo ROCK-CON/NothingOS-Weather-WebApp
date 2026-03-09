@@ -20,10 +20,10 @@ export default function DigitalClock() {
   }, []);
 
   // Prevent hydration mismatch — render placeholder until client time is known
-  if (!hours) return <div className="h-[72px]" />;
+  if (!hours) return <div className="w-[196px] h-[72px]" />;
 
   return (
-    <div className="flex items-baseline leading-none mb-2">
+    <div className="flex items-baseline leading-none">
       <span className="text-[72px] font-mono font-bold text-black dark:text-white tracking-tighter leading-none">
         {hours}
       </span>
