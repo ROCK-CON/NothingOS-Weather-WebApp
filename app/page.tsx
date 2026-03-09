@@ -214,7 +214,7 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="order-1 lg:col-start-2 lg:row-start-1 lg:self-start"
                 >
-                  <DigitalClock />
+                  <DigitalClock timezoneOffset={weather?.timezoneOffset} />
                 </motion.div>
 
                 {/* ── Weather card ── mobile 2 · desktop col 1, row 1 */}

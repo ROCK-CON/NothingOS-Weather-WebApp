@@ -17,6 +17,7 @@ export interface WeatherData {
   aqi: number;
   lat: number;
   lon: number;
+  timezoneOffset: number;
 }
 
 export interface HourlyForecastItem {
@@ -80,6 +81,7 @@ const mockCurrentWeather: WeatherData = {
   aqi: 2,
   lat: -37.8136,
   lon: 144.9631,
+  timezoneOffset: 36000,
 };
 
 const mockHourly: HourlyForecastItem[] = Array.from({ length: 24 }, (_, i) => {
@@ -187,6 +189,7 @@ function parseWeatherResponse(data: Record<string, unknown>): WeatherData {
     aqi: 1,
     lat: coord.lat,
     lon: coord.lon,
+    timezoneOffset: data.timezone as number,
   };
 }
 

@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 
-export default function DigitalClock() {
+interface DigitalClockProps {
+  timezoneOffset?: number;
+}
+
+export default function DigitalClock({ timezoneOffset }: DigitalClockProps) {
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [showColon, setShowColon] = useState(true);
@@ -10,16 +14,30 @@ export default function DigitalClock() {
   useEffect(() => {
     const tick = () => {
       const now = new Date();
-      setHours(String(now.getHours()).padStart(2, "0"));
-      setMinutes(String(now.getMinutes()).padStart(2, "0"));
-      setShowColon(now.getSeconds() % 2 === 0);
+      let displayDate: Date;
+
+      if (timezoneOffset !== undefined) {
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        displayDate = new Date(utcMs + timezoneOffset * 1000);
+      } else {
+        displayDate = now;
+      }
+
+      if (timezoneOffset !== undefined) {
+        setHours(String(displayDate.getUTCHours()).padStart(2, "0"));
+        setMinutes(String(displayDate.getUTCMinutes()).padStart(2, "0"));
+        setShowColon(displayDate.getUTCSeconds() % 2 === 0);
+      } else {
+        setHours(String(displayDate.getHours()).padStart(2, "0"));
+        setMinutes(String(displayDate.getMinutes()).padStart(2, "0"));
+        setShowColon(displayDate.getSeconds() % 2 === 0);
+      }
     };
-    tick(); // run immediately on mount
+    tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [timezoneOffset]);
 
-  // Prevent hydration mismatch — render placeholder until client time is known
   if (!hours) return <div className="w-[260px] h-[96px]" />;
 
   return (
