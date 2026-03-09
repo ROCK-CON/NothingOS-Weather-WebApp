@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import WeatherIcon from "./WeatherIcon";
 import WeatherInfoCards from "./WeatherInfoCards";
+import DigitalClock from "./DigitalClock";
 import type { WeatherData } from "@/lib/weather";
 
 interface WeatherCardProps {
@@ -17,6 +18,9 @@ export default function WeatherCard({ data }: WeatherCardProps) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="w-full"
     >
+      {/* Digital clock */}
+      <DigitalClock />
+
       {/* Main temperature display */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -46,7 +50,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <WeatherIcon condition={data.condition} size={160} />
+          <WeatherIcon condition={data.condition} size={180} />
         </motion.div>
       </div>
 
