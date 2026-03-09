@@ -8,6 +8,7 @@ import HourlyForecast from "@/components/HourlyForecast";
 import WeeklyForecast from "@/components/WeeklyForecast";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ThemeToggle from "@/components/ThemeToggle";
+import DigitalClock from "@/components/DigitalClock";
 import {
   getCurrentWeather,
   getForecast,
@@ -191,6 +192,13 @@ export default function Home() {
             >
               <WeatherCard data={weather} />
               <div className="flex flex-col gap-8 lg:h-full">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <DigitalClock />
+                </motion.div>
                 <HourlyForecast data={hourly} />
                 <WeeklyForecast data={daily} className="lg:flex-1" />
               </div>
