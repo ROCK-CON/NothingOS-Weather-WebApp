@@ -8,6 +8,19 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.4.0] — 2026-03-10
+
+### Added
+- **Mobile-first card ordering** — on narrow screens cards now stack as:
+  Clock → Temperature → Hourly Forecast → 10-Day Forecast → Sunrise & Sunset → Detail cards
+
+### Changed
+- **Unified CSS Grid** — three separate sub-row grids merged into one `grid-cols-1 lg:grid-cols-2` container. Mobile ordering is controlled with CSS `order-*` utilities; desktop layout uses explicit `lg:col-start` / `lg:row-start` placement to reproduce the same 3-row × 2-col alignment as before
+- Row 1 items (WeatherCard, DigitalClock) use `lg:self-start` to preserve top-alignment at desktop width
+- Row 2 (SunriseSunset / HourlyForecast) and Row 3 (DetailCards / WeeklyForecast) use default stretch so CSS Grid continues to bottom-align each pair
+
+---
+
 ## [0.3.0] — 2026-03-10
 
 ### Added

@@ -192,34 +192,60 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col gap-8"
             >
-              {/* Header row — temperature left, clock right */}
-              <div className="grid lg:grid-cols-2 lg:items-start gap-8">
-                <WeatherCard data={weather} />
+              {/*
+                Unified CSS Grid — 1 column on mobile, 2 columns on desktop.
+
+                Mobile: items stack in `order-*` sequence:
+                  1 Clock → 2 Weather → 3 Hourly → 4 10-Day → 5 Sunrise/Sunset → 6 Details
+
+                Desktop (lg): items explicitly placed with col-start / row-start,
+                reproducing the original 3-row × 2-col layout with alignment intact:
+                  Row 1: WeatherCard (col 1) | Clock (col 2)       — self-start
+                  Row 2: SunriseSunset (col 1) | Hourly (col 2)    — stretch (Hourly sets height)
+                  Row 3: DetailCards (col 1)  | 10-Day (col 2)     — stretch
+              */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                {/* ── Clock ── mobile 1 · desktop col 2, row 1 */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
+                  className="order-1 lg:col-start-2 lg:row-start-1 lg:self-start"
                 >
                   <DigitalClock />
                 </motion.div>
-              </div>
 
-              {/* Cards sub-row 1: Sunrise & Sunset stretches to match Hourly Forecast */}
-              <div className="grid lg:grid-cols-2 gap-8">
-                <SunriseSunsetCard
-                  sunrise={weather.sunrise}
-                  sunset={weather.sunset}
-                  now={weather.dt}
-                />
-                <HourlyForecast data={hourly} />
-              </div>
+                {/* ── Weather card ── mobile 2 · desktop col 1, row 1 */}
+                <div className="order-2 lg:col-start-1 lg:row-start-1 lg:self-start">
+                  <WeatherCard data={weather} />
+                </div>
 
-              {/* Cards sub-row 2: Details left, 10-Day right — no items-start so both stretch to same height */}
-              <div className="grid lg:grid-cols-2 gap-8">
-                <WeatherDetailsCards data={weather} />
-                <WeeklyForecast data={daily} />
+                {/* ── Hourly forecast ── mobile 3 · desktop col 2, row 2 */}
+                <div className="order-3 lg:col-start-2 lg:row-start-2">
+                  <HourlyForecast data={hourly} />
+                </div>
+
+                {/* ── 10-Day forecast ── mobile 4 · desktop col 2, row 3 */}
+                <div className="order-4 lg:col-start-2 lg:row-start-3">
+                  <WeeklyForecast data={daily} />
+                </div>
+
+                {/* ── Sunrise & Sunset ── mobile 5 · desktop col 1, row 2 */}
+                <div className="order-5 lg:col-start-1 lg:row-start-2">
+                  <SunriseSunsetCard
+                    sunrise={weather.sunrise}
+                    sunset={weather.sunset}
+                    now={weather.dt}
+                  />
+                </div>
+
+                {/* ── Detail cards ── mobile 6 · desktop col 1, row 3 */}
+                <div className="order-6 lg:col-start-1 lg:row-start-3">
+                  <WeatherDetailsCards data={weather} />
+                </div>
+
               </div>
             </motion.div>
           ) : null}
