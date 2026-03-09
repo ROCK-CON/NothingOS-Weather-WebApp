@@ -594,14 +594,9 @@ export function AirQualityCard({ aqi, className = "" }: { aqi: number; className
 // ─── Details cards (Wind, Humidity, Pressure, Visibility, AQ) ─────────────────
 
 export function WeatherDetailsCards({ data }: { data: WeatherData }) {
+  // grid-rows-[auto_auto_1fr]: rows 1 & 2 keep natural heights; row 3 (AQ) fills remainder.
+  // h-full fills the CSS Grid cell already stretched to WeeklyForecast height.
   return (
-    {/*
-      grid-rows-[auto_auto_1fr]: rows 1 & 2 (Wind/Humidity, Pressure/Visibility) keep
-      their natural heights; row 3 (Air Quality) receives the remaining 1fr so it
-      stretches to the bottom.  h-full fills the grid cell, which CSS Grid has already
-      stretched to match WeeklyForecast height — no circular inflation because only
-      row 3 uses fr (resolved after rows 1 & 2 are sized from their natural content).
-    */}
     <div className="grid grid-cols-2 grid-rows-[auto_auto_1fr] gap-4 h-full">
       <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
       <HumidityCard humidity={data.humidity} />
