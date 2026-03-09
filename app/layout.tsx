@@ -11,7 +11,10 @@ export const metadata: Metadata = {
     title: "Nothing Weather",
   },
   icons: {
-    icon: "/icons/icon-192x192.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192x192.png", type: "image/png", sizes: "192x192" },
+    ],
     apple: "/icons/icon-192x192.png",
   },
 };
