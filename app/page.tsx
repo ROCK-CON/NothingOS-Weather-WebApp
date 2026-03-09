@@ -216,8 +216,8 @@ export default function Home() {
                 <HourlyForecast data={hourly} />
               </div>
 
-              {/* Cards sub-row 2: Details left, 10-Day right */}
-              <div className="grid lg:grid-cols-2 lg:items-start gap-8">
+              {/* Cards sub-row 2: Details left, 10-Day right — no items-start so both stretch to same height */}
+              <div className="grid lg:grid-cols-2 gap-8">
                 <WeatherDetailsCards data={weather} />
                 <WeeklyForecast data={daily} />
               </div>

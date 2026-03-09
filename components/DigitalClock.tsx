@@ -23,7 +23,10 @@ export default function DigitalClock() {
   if (!hours) return <div className="w-[260px] h-[96px]" />;
 
   return (
-    <div className="flex items-baseline leading-none">
+    <div
+      className="flex items-baseline leading-none"
+      style={{ fontFeatureSettings: '"zero" 0' }}
+    >
       <span className="text-[96px] font-mono font-bold text-black dark:text-white tracking-tighter leading-none">
         {hours}
       </span>
