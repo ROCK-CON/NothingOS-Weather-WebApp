@@ -57,6 +57,11 @@ export function SunriseSunsetCard({
   // t clamped 0–1 along the arc
   const t = Math.min(1, Math.max(0, (now - sunrise) / (sunset - sunrise)));
 
+  // Daylight duration
+  const daylightSecs = sunset - sunrise;
+  const daylightH = Math.floor(daylightSecs / 3600);
+  const daylightM = Math.floor((daylightSecs % 3600) / 60);
+
   // Quadratic Bézier: P0=(20,72), P1=(130,8), P2=(240,72)
   const p0 = { x: 20, y: 72 };
   const p1 = { x: 130, y: 8 };
@@ -73,9 +78,18 @@ export function SunriseSunsetCard({
     <InfoCard delay={0.65} className={`h-full flex flex-col ${className}`}>
       <CardLabel>Sunrise &amp; Sunset</CardLabel>
 
-      {/* Times flank the arc; flex-1 fills the card height so HourlyForecast
-          sets the row height and this card stretches up to match it exactly */}
-      <div className="flex-1 flex items-end justify-between">
+      {/* Daylight duration — fills the empty space above the arc */}
+      <div className="flex-1 flex flex-col justify-center">
+        <p className="text-[#555555] dark:text-[#8A8A8A] text-[10px] font-mono uppercase tracking-widest mb-1">
+          Daylight
+        </p>
+        <p className="text-black dark:text-white font-mono text-2xl font-bold tracking-tight leading-none">
+          {daylightH}h {daylightM}m
+        </p>
+      </div>
+
+      {/* Arc + Rise/Set times pinned to bottom */}
+      <div className="flex items-end justify-between">
         {/* Rise time */}
         <div className="flex flex-col gap-1">
           <span className="text-[#555555] dark:text-[#8A8A8A] text-[10px] font-mono uppercase tracking-widest">
