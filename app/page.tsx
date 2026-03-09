@@ -242,7 +242,8 @@ export default function Home() {
                 </div>
 
                 {/* ── Detail cards ── mobile 6 · desktop col 1, row 3 */}
-                <div className="order-6 lg:col-start-1 lg:row-start-3">
+                {/* h-full: makes height explicit so WeatherDetailsCards' h-full resolves correctly */}
+                <div className="order-6 lg:col-start-1 lg:row-start-3 lg:h-full">
                   <WeatherDetailsCards data={weather} />
                 </div>
 
