@@ -1,8 +1,3 @@
-import axios from "axios";
-
-const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-const BASE_URL = "https://api.openweathermap.org/data/2.5";
-
 export interface WeatherData {
   city: string;
   country: string;
@@ -65,8 +60,6 @@ function mapCondition(weatherId: number, icon: string): WeatherCondition {
   if (weatherId >= 803) return "cloudy";
   return "clear";
 }
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const mockCurrentWeather: WeatherData = {
   city: "Melbourne",
@@ -151,47 +144,109 @@ const mockDaily: DailyForecastItem[] = (() => {
   });
 })();
 
-// ─── API Functions ─────────────────────────────────────────────────────────────
+async function fetchFromApi(endpoint: string, params: Record<string, string>) {
+  const url = new URL("/api/weather", window.location.origin);
+  url.searchParams.set("endpoint", endpoint);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `API error: ${response.status}`);
+  }
+  return response.json();
+}
+
+function parseWeatherResponse(data: Record<string, unknown>): WeatherData {
+  const main = data.main as Record<string, number>;
+  const wind = data.wind as Record<string, number>;
+  const sys = data.sys as Record<string, unknown>;
+  const coord = data.coord as Record<string, number>;
+  const weatherArr = data.weather as Array<Record<string, unknown>>;
+  const w = weatherArr[0];
+
+  return {
+    city: data.name as string,
+    country: sys.country as string,
+    temperature: Math.round(main.temp),
+    feelsLike: Math.round(main.feels_like),
+    description:
+      (w.description as string).charAt(0).toUpperCase() +
+      (w.description as string).slice(1),
+    condition: mapCondition(w.id as number, w.icon as string),
+    humidity: main.humidity,
+    windSpeed: Math.round((wind.speed ?? 0) * 3.6),
+    windDeg: wind.deg ?? 0,
+    visibility: data.visibility as number,
+    pressure: main.pressure,
+    icon: w.icon as string,
+    sunrise: (sys.sunrise as number),
+    sunset: (sys.sunset as number),
+    dt: data.dt as number,
+    aqi: 1,
+    lat: coord.lat,
+    lon: coord.lon,
+  };
+}
+
+function parseForecastResponse(data: Record<string, unknown>): {
+  hourly: HourlyForecastItem[];
+  daily: DailyForecastItem[];
+} {
+  const items = (data.list as Array<Record<string, unknown>>);
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const hourly: HourlyForecastItem[] = items.slice(0, 24).map((item) => {
+    const main = item.main as Record<string, number>;
+    const weatherArr = item.weather as Array<Record<string, unknown>>;
+    const w = weatherArr[0];
+    return {
+      time: item.dt as number,
+      temperature: Math.round(main.temp),
+      condition: mapCondition(w.id as number, w.icon as string),
+      icon: w.icon as string,
+      description: w.description as string,
+      precipitation: Math.round((item.pop as number) * 100),
+    };
+  });
+
+  const dayMap = new Map<string, Array<Record<string, unknown>>>();
+  items.forEach((item) => {
+    const date = new Date((item.dt as number) * 1000);
+    const key = date.toDateString();
+    if (!dayMap.has(key)) dayMap.set(key, []);
+    dayMap.get(key)!.push(item);
+  });
+
+  const daily: DailyForecastItem[] = [];
+  let i = 0;
+  dayMap.forEach((dayItems) => {
+    if (daily.length >= 10) return;
+    const temps = dayItems.map((d) => (d.main as Record<string, number>).temp);
+    const midday = dayItems[Math.floor(dayItems.length / 2)];
+    const date = new Date((midday.dt as number) * 1000);
+    const middayWeather = (midday.weather as Array<Record<string, unknown>>)[0];
+    daily.push({
+      date: midday.dt as number,
+      dayName: i === 0 ? "Today" : dayNames[date.getDay()],
+      high: Math.round(Math.max(...temps)),
+      low: Math.round(Math.min(...temps)),
+      condition: mapCondition(middayWeather.id as number, middayWeather.icon as string),
+      icon: middayWeather.icon as string,
+      description: middayWeather.description as string,
+      precipitation: Math.round((midday.pop as number) * 100),
+    });
+    i++;
+  });
+
+  return { hourly, daily };
+}
 
 export async function getCurrentWeather(city: string): Promise<WeatherData> {
-  if (!API_KEY) {
-    console.warn("No API key – using mock data");
-    return { ...mockCurrentWeather, city };
-  }
-
   try {
-    const response = await axios.get(`${BASE_URL}/weather`, {
-      params: {
-        q: city,
-        appid: API_KEY,
-        units: "metric",
-      },
-    });
-
-    const data = response.data;
-
-    return {
-      city: data.name,
-      country: data.sys.country,
-      temperature: Math.round(data.main.temp),
-      feelsLike: Math.round(data.main.feels_like),
-      description:
-        data.weather[0].description.charAt(0).toUpperCase() +
-        data.weather[0].description.slice(1),
-      condition: mapCondition(data.weather[0].id, data.weather[0].icon),
-      humidity: data.main.humidity,
-      windSpeed: Math.round(data.wind.speed * 3.6),
-      windDeg: data.wind?.deg ?? 0,
-      visibility: data.visibility,
-      pressure: data.main.pressure,
-      icon: data.weather[0].icon,
-      sunrise: data.sys.sunrise,
-      sunset: data.sys.sunset,
-      dt: data.dt,
-      aqi: 1,
-      lat: data.coord.lat,
-      lon: data.coord.lon,
-    };
+    const data = await fetchFromApi("weather", { city });
+    return parseWeatherResponse(data);
   } catch {
     console.warn("API error – using mock data");
     return { ...mockCurrentWeather, city };
@@ -202,44 +257,12 @@ export async function getCurrentWeatherByCoords(
   lat: number,
   lon: number
 ): Promise<WeatherData> {
-  if (!API_KEY) {
-    return mockCurrentWeather;
-  }
-
   try {
-    const response = await axios.get(`${BASE_URL}/weather`, {
-      params: {
-        lat,
-        lon,
-        appid: API_KEY,
-        units: "metric",
-      },
+    const data = await fetchFromApi("weather", {
+      lat: lat.toString(),
+      lon: lon.toString(),
     });
-
-    const data = response.data;
-
-    return {
-      city: data.name,
-      country: data.sys.country,
-      temperature: Math.round(data.main.temp),
-      feelsLike: Math.round(data.main.feels_like),
-      description:
-        data.weather[0].description.charAt(0).toUpperCase() +
-        data.weather[0].description.slice(1),
-      condition: mapCondition(data.weather[0].id, data.weather[0].icon),
-      humidity: data.main.humidity,
-      windSpeed: Math.round(data.wind.speed * 3.6),
-      windDeg: data.wind?.deg ?? 0,
-      visibility: data.visibility,
-      pressure: data.main.pressure,
-      icon: data.weather[0].icon,
-      sunrise: data.sys.sunrise,
-      sunset: data.sys.sunset,
-      dt: data.dt,
-      aqi: 1,
-      lat: data.coord.lat,
-      lon: data.coord.lon,
-    };
+    return parseWeatherResponse(data);
   } catch {
     return mockCurrentWeather;
   }
@@ -249,82 +272,9 @@ export async function getForecast(city: string): Promise<{
   hourly: HourlyForecastItem[];
   daily: DailyForecastItem[];
 }> {
-  if (!API_KEY) {
-    return { hourly: mockHourly, daily: mockDaily };
-  }
-
   try {
-    const response = await axios.get(`${BASE_URL}/forecast`, {
-      params: {
-        q: city,
-        appid: API_KEY,
-        units: "metric",
-        cnt: 40,
-      },
-    });
-
-    const items = response.data.list;
-
-    const hourly: HourlyForecastItem[] = items.slice(0, 24).map(
-      (item: {
-        dt: number;
-        main: { temp: number };
-        weather: Array<{ id: number; icon: string; description: string }>;
-        pop: number;
-      }) => ({
-        time: item.dt,
-        temperature: Math.round(item.main.temp),
-        condition: mapCondition(item.weather[0].id, item.weather[0].icon),
-        icon: item.weather[0].icon,
-        description: item.weather[0].description,
-        precipitation: Math.round(item.pop * 100),
-      })
-    );
-
-    // Group by day for daily forecast
-    const dayMap = new Map<string, typeof items>();
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    items.forEach(
-      (item: {
-        dt: number;
-        main: { temp_max: number; temp_min: number };
-        weather: Array<{ id: number; icon: string; description: string }>;
-        pop: number;
-      }) => {
-        const date = new Date(item.dt * 1000);
-        const key = date.toDateString();
-        if (!dayMap.has(key)) dayMap.set(key, []);
-        dayMap.get(key)!.push(item);
-      }
-    );
-
-    const daily: DailyForecastItem[] = [];
-    let i = 0;
-    dayMap.forEach((dayItems, key) => {
-      if (daily.length >= 10) return;
-      const temps = dayItems.map(
-        (d: { main: { temp: number } }) => d.main.temp
-      );
-      const midday = dayItems[Math.floor(dayItems.length / 2)];
-      const date = new Date(midday.dt * 1000);
-      daily.push({
-        date: midday.dt,
-        dayName: i === 0 ? "Today" : dayNames[date.getDay()],
-        high: Math.round(Math.max(...temps)),
-        low: Math.round(Math.min(...temps)),
-        condition: mapCondition(
-          midday.weather[0].id,
-          midday.weather[0].icon
-        ),
-        icon: midday.weather[0].icon,
-        description: midday.weather[0].description,
-        precipitation: Math.round(midday.pop * 100),
-      });
-      i++;
-    });
-
-    return { hourly, daily };
+    const data = await fetchFromApi("forecast", { city });
+    return parseForecastResponse(data);
   } catch {
     return { hourly: mockHourly, daily: mockDaily };
   }
@@ -337,79 +287,12 @@ export async function getForecastByCoords(
   hourly: HourlyForecastItem[];
   daily: DailyForecastItem[];
 }> {
-  if (!API_KEY) {
-    return { hourly: mockHourly, daily: mockDaily };
-  }
-
   try {
-    const response = await axios.get(`${BASE_URL}/forecast`, {
-      params: {
-        lat,
-        lon,
-        appid: API_KEY,
-        units: "metric",
-        cnt: 40,
-      },
+    const data = await fetchFromApi("forecast", {
+      lat: lat.toString(),
+      lon: lon.toString(),
     });
-
-    const items = response.data.list;
-
-    const hourly: HourlyForecastItem[] = items.slice(0, 24).map(
-      (item: {
-        dt: number;
-        main: { temp: number };
-        weather: Array<{ id: number; icon: string; description: string }>;
-        pop: number;
-      }) => ({
-        time: item.dt,
-        temperature: Math.round(item.main.temp),
-        condition: mapCondition(item.weather[0].id, item.weather[0].icon),
-        icon: item.weather[0].icon,
-        description: item.weather[0].description,
-        precipitation: Math.round(item.pop * 100),
-      })
-    );
-
-    const dayMap = new Map<string, typeof items>();
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    items.forEach(
-      (item: {
-        dt: number;
-        main: { temp_max: number; temp_min: number };
-        weather: Array<{ id: number; icon: string; description: string }>;
-        pop: number;
-      }) => {
-        const date = new Date(item.dt * 1000);
-        const key = date.toDateString();
-        if (!dayMap.has(key)) dayMap.set(key, []);
-        dayMap.get(key)!.push(item);
-      }
-    );
-
-    const daily: DailyForecastItem[] = [];
-    let i = 0;
-    dayMap.forEach((dayItems) => {
-      if (daily.length >= 10) return;
-      const temps = dayItems.map(
-        (d: { main: { temp: number } }) => d.main.temp
-      );
-      const midday = dayItems[Math.floor(dayItems.length / 2)];
-      const date = new Date(midday.dt * 1000);
-      daily.push({
-        date: midday.dt,
-        dayName: i === 0 ? "Today" : dayNames[date.getDay()],
-        high: Math.round(Math.max(...temps)),
-        low: Math.round(Math.min(...temps)),
-        condition: mapCondition(midday.weather[0].id, midday.weather[0].icon),
-        icon: midday.weather[0].icon,
-        description: midday.weather[0].description,
-        precipitation: Math.round(midday.pop * 100),
-      });
-      i++;
-    });
-
-    return { hourly, daily };
+    return parseForecastResponse(data);
   } catch {
     return { hourly: mockHourly, daily: mockDaily };
   }
