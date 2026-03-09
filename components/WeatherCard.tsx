@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import WeatherIcon from "./WeatherIcon";
-import WeatherInfoCards from "./WeatherInfoCards";
 import type { WeatherData } from "@/lib/weather";
 
 interface WeatherCardProps {
@@ -64,8 +63,6 @@ export default function WeatherCard({ data }: WeatherCardProps) {
         </span>
       </motion.div>
 
-      {/* Infographic cards */}
-      <WeatherInfoCards data={data} />
     </motion.div>
   );
 }
