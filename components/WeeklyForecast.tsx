@@ -304,7 +304,7 @@ export default function WeeklyForecast({ data, className = "" }: WeeklyForecastP
       className={`w-full glass rounded-2xl p-5 ${className}`}
     >
       <h2 className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4">
-        6-Day Forecast
+        5-Day Forecast
       </h2>
 
       <div className="flex flex-col">

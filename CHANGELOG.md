@@ -24,7 +24,7 @@ All notable changes to Nothing Weather are documented here.
 - **"TEMPERATURE TREND" section heading** — labelled section break inside the forecast card, styled to match all other card headings (`font-mono uppercase tracking-widest` in muted grey)
 
 ### Changed
-- **6-Day Forecast** — forecast rows and temperature trend graph now show Today + 5 days (6 entries). Previously capped at 5 entries (Today + 4 days). Card heading updated from "5-Day Forecast" → "6-Day Forecast"
+- **5-Day Forecast** — forecast rows and temperature trend graph now show Today + 5 days (6 entries total). Previously capped at 5 entries (Today + 4 days). Card heading reads "5-Day Forecast"
 
 ---
 

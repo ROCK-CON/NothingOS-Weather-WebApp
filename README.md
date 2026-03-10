@@ -8,7 +8,7 @@ A Nothing OS–inspired weather web application built with Next.js 14. Minimal m
 - **Current conditions** — Large 96px temperature display with 112px weather icon; "Feels like" and condition description in a clean two-row layout
 - **Sunrise & Sunset card** — Arc SVG showing the sun's current position along its daily path, live daylight duration (`Xh Ym`), and Rise / Set times
 - **24-hour hourly forecast** — Horizontally scrollable glass card; current hour highlighted with a red accent bar
-- **6-day forecast** — Today plus 5 days with temperature range bars scaled to the full period min / max; precipitation indicators
+- **5-day forecast** — Today plus 5 days with temperature range bars scaled to the full period min / max; precipitation indicators
 - **Temperature Trend graph** — Smooth bezier curve SVG chart inside the forecast card; shaded band between high and low lines, floating temperature labels, peak day highlighted in red
 - **Weather detail cards** — Six SVG infographic cards: Wind compass, Humidity cylinder, Pressure gauge, Visibility fan lines, Air Quality dot grid
 - **City search** — Type-ahead suggestions with quick-select
@@ -130,7 +130,7 @@ The desktop layout uses a unified two-column CSS Grid. Mobile stacks all cards i
 │  Sunrise & Sunset       │  Hourly Forecast        │  ← Row 2
 │  [daylight + arc]       │  [24h scroll]           │
 ├─────────────────────────┼─────────────────────────┤
-│  Wind  │  Humidity      │  6-Day Forecast         │  ← Row 3
+│  Wind  │  Humidity      │  5-Day Forecast         │  ← Row 3
 │  Press │  Visibility    │  [range bars]           │
 │     Air Quality         │  ─────────────────────  │
 │                         │  Temperature Trend      │
@@ -138,7 +138,7 @@ The desktop layout uses a unified two-column CSS Grid. Mobile stacks all cards i
 └─────────────────────────┴─────────────────────────┘
 ```
 
-**Mobile order:** Clock → Temperature → Hourly Forecast → 6-Day Forecast → Sunrise & Sunset → Detail cards
+**Mobile order:** Clock → Temperature → Hourly Forecast → 5-Day Forecast → Sunrise & Sunset → Detail cards
 
 ## Design Tokens
 
