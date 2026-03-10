@@ -23,7 +23,7 @@ import {
   type DailyForecastItem,
 } from "@/lib/weather";
 
-const DEFAULT_CITY = "Melbourne";
+const DEFAULT_CITY = "Melbourne,AU";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-AU", {
