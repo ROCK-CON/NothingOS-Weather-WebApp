@@ -50,8 +50,17 @@ export default function Home() {
         getCurrentWeather(cityName),
         getForecast(cityName),
       ]);
+      const nowItem: HourlyForecastItem = {
+        time: weatherData.dt,
+        temperature: weatherData.temperature,
+        condition: weatherData.condition,
+        icon: weatherData.icon,
+        description: weatherData.description,
+        precipitation: 0,
+      };
+      const futureHourly = forecastData.hourly.filter((item) => item.time > weatherData.dt);
       setWeather(weatherData);
-      setHourly(forecastData.hourly);
+      setHourly([nowItem, ...futureHourly]);
       setDaily(forecastData.daily);
       setCity(weatherData.city);
     } catch {
@@ -78,8 +87,17 @@ export default function Home() {
             getCurrentWeatherByCoords(latitude, longitude),
             getForecastByCoords(latitude, longitude),
           ]);
+          const nowItem: HourlyForecastItem = {
+            time: weatherData.dt,
+            temperature: weatherData.temperature,
+            condition: weatherData.condition,
+            icon: weatherData.icon,
+            description: weatherData.description,
+            precipitation: 0,
+          };
+          const futureHourly = forecastData.hourly.filter((item) => item.time > weatherData.dt);
           setWeather(weatherData);
-          setHourly(forecastData.hourly);
+          setHourly([nowItem, ...futureHourly]);
           setDaily(forecastData.daily);
           setCity(weatherData.city);
         } catch {
