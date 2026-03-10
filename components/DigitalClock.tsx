@@ -17,7 +17,7 @@ export default function DigitalClock({ timezoneOffset }: DigitalClockProps) {
       let displayDate: Date;
 
       if (timezoneOffset !== undefined) {
-        const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        const utcMs = now.getTime(); // getTime() is already UTC — no local-offset adjustment needed
         displayDate = new Date(utcMs + timezoneOffset * 1000);
       } else {
         displayDate = now;
