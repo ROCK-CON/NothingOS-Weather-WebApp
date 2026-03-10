@@ -8,6 +8,15 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.8.0] — 2026-03-10
+
+### Fixed
+- **Default city resolves to Melbourne, Australia** — appended country code to `DEFAULT_CITY` (`"Melbourne,AU"`). Previously the bare name `"Melbourne"` was resolved by OpenWeatherMap to Melbourne, Florida, USA
+- **DigitalClock timezone calculation** — `Date.getTime()` already returns UTC milliseconds; the previous code additionally added `getTimezoneOffset() * 60000`, which double-counted the device's local offset and caused the displayed time to shift by the browser's timezone rather than always showing the searched city's local time. Removed the erroneous `getTimezoneOffset()` term
+- **Hourly Forecast gap between "Now" and the next slot** — OWM free tier returns 3-hour interval forecasts starting from the next upcoming UTC slot, so the first item could be up to 3 hours ahead of the actual current time. Marking that item as "Now" and then showing the subsequent slot with its real label created a visible gap of up to ~6 hours. Fixed by injecting current weather data as a genuine "Now" entry at index 0 and filtering out any forecast slots with timestamps in the past (`item.time > weather.dt`). Applied to both city-name and coordinate fetch paths
+
+---
+
 ## [0.7.0] — 2026-03-10
 
 ### Added

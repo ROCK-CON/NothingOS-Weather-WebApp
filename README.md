@@ -15,7 +15,7 @@ A Nothing OS–inspired weather web application built with Next.js 14. Minimal m
 - **Geolocation** — Auto-loads your local weather on first visit if permission is already granted
 - **Light / Dark mode** — Toggle with smooth transition; dark defaults to `#000000`, light to `#f5f5f5`
 - **Server-side API proxy** — API key is kept server-side via a Next.js Route Handler; never exposed to the browser
-- **Mock data fallback** — Fully functional without an API key (Melbourne mock data)
+- **Mock data fallback** — Fully functional without an API key (defaults to Melbourne, AU mock data)
 - **PWA ready** — Installable on mobile via `manifest.json`
 - **Framer Motion animations** — Entrance animations on all cards and data elements
 
