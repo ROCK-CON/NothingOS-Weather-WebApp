@@ -60,6 +60,10 @@ export default function Home() {
   // What's on screen, so a background refresh re-fetches the same place.
   const lastQueryRef = useRef<WeatherQuery | null>(null);
   const lastFetchRef = useRef(0);
+  // When the site last successfully checked for new data (ms). Shown as
+  // "Checked …" so a tap visibly does something, even when the server hands
+  // back the same cached reading.
+  const [checkedAt, setCheckedAt] = useState<number | null>(null);
 
   /**
    * Fetch and store weather. Only touches state after the request settles.
@@ -81,6 +85,7 @@ export default function Home() {
       const resolvedCity = `${data.current.city},${data.current.country}`;
       lastQueryRef.current = "city" in query ? { city: resolvedCity } : query;
       lastFetchRef.current = Date.now();
+      setCheckedAt(lastFetchRef.current);
       // Remember explicit city searches; a location lookup clears the preference.
       writeLastCity("city" in query ? resolvedCity : null);
     } catch (err) {
@@ -91,17 +96,23 @@ export default function Home() {
       if (!controller.signal.aborted) {
         inFlightRef.current = false;
         setLoading(false);
-        setRefreshing(false);
       }
     }
   }, []);
 
-  /** Re-fetch what's on screen without the loading skeleton. */
+  /**
+   * Re-fetch what's on screen without the loading skeleton. "Updating…" stays
+   * up for at least a moment — a cached response returns in milliseconds,
+   * which would otherwise look like nothing happened.
+   */
   const refresh = useCallback(() => {
     const query = lastQueryRef.current;
     if (!query || inFlightRef.current) return;
     setRefreshing(true);
-    fetchInto(query, true);
+    Promise.all([
+      fetchInto(query, true),
+      new Promise((resolve) => setTimeout(resolve, 600)),
+    ]).finally(() => setRefreshing(false));
   }, [fetchInto]);
 
   /** User-initiated lookup: show the skeleton, clear any old error, then fetch. */
@@ -216,9 +227,11 @@ export default function Home() {
           </div>
           <div className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase min-h-4 flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{dateLabel}</span>
-            {weather && !loading && (
+            {weather && !loading && checkedAt !== null && (
               <UpdatedAgo
+                checkedAt={checkedAt}
                 observedAt={weather.dt}
+                timezoneOffset={weather.timezoneOffset}
                 refreshing={refreshing}
                 failed={refreshFailed}
                 onRefresh={refresh}

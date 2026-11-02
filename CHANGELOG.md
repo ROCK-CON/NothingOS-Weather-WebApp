@@ -8,6 +8,11 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.10.1] — 2026-11-02
+
+### Fixed
+- **Tap to refresh looked broken** — the line showed the age of the weather reading, which can't change until a new reading exists (the server caches each city for 10 minutes, and observations are often several minutes old when cached). Tapping fetched successfully but nothing visibly changed. The line now reads **"Checked just now · reading 13:05"**: *Checked* resets on every refresh, *reading* is when the observation was taken (location's local time). "Checking…" now shows for a moment while refreshing
+
 ## [0.10.0] — 2026-11-02
 
 ### Added

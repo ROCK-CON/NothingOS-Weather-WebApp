@@ -4,7 +4,7 @@ A Nothing OS–inspired weather web application built with Next.js 16. Minimal m
 
 ## Features
 
-- **Always fresh** — Auto-refreshes every 10 minutes and when you return to the tab; "Updated X min ago" shows the reading's age (tap to refresh)
+- **Always fresh** — Auto-refreshes every 10 minutes and when you return to the tab; "Checked … · reading HH:MM" shows when it last checked and when the reading was taken (tap to refresh)
 - **Live digital clock** — 96px monochrome clock with blinking red colon, updates every second; shows the searched location's local time
 - **Current conditions** — Large 96px temperature display with 112px weather icon; "Feels like" and condition description in a clean two-row layout
 - **Sunrise & Sunset card** — Arc SVG showing the sun's current position along its daily path, live daylight duration (`Xh Ym`), and Rise / Set times
