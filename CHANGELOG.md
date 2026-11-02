@@ -8,6 +8,40 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.9.0] — 2026-11-02
+
+Security review and migration from Replit to Vercel.
+
+### Security
+- **Removed a committed API key** — `.replit` contained the OpenWeatherMap key in plain text. The key has been revoked; `.replit` and `replit.md` are removed and `.replit` is now git-ignored
+- **Renamed env var** `NEXT_PUBLIC_WEATHER_API_KEY` → `WEATHER_API_KEY` so it can never be bundled into browser code
+- **API route hardened** — validates city (≤100 chars, letters and place-name punctuation only) and coordinates (numeric, in range, rounded to ~1 km); 8 s upstream timeout; upstream errors are logged server-side and never echoed to the client
+- **Response caching** — successful responses are cached for 10 minutes at the CDN and in Next's data cache, cutting OpenWeatherMap usage and limiting quota-abuse
+- **Security headers** — Content-Security-Policy (production), `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`; `X-Powered-By` removed
+- **Dependencies** — Next.js 14 → 16, React 18 → 19; removed `axios` (≈26 advisories) and unused `lottie-react`. Production `npm audit`: 0 vulnerabilities (was 7, including 1 critical)
+
+### Fixed
+- **No more silent fake data** — any API failure previously returned random mock weather that looked real (and labelled it with whatever was searched, e.g. a misspelt city). Errors now show in the error banner; demo data is only used in local development without a key, and is clearly labelled
+- **Air Quality was hard-coded to "Good"** — now uses OpenWeatherMap's Air Pollution API; shows "Unavailable" if that call fails
+- **Times and dates used the device's timezone** — hourly times, sunrise/sunset, the date line and daily grouping now all use the searched location's timezone
+- **"Today" mislabelled late in the evening** when every forecast point fell on the next day
+- **"Hourly" forecast spanned 72 hours** in 3-hour steps — now shows Now + the next 24 hours ("Next 24 Hours")
+- **Precipitation units mixed** fractions and percentages; now consistently 0–100 %, with the daily value being the day's highest chance
+- **Stale results** — a slow earlier lookup could overwrite a newer search; in-flight requests are now cancelled
+- **Stuck loading skeleton** if location permission was granted but the position lookup failed
+- Midnight could render as "24" in some browsers
+
+### Changed
+- One API call per lookup (`/api/weather` returns current + hourly + daily together) instead of two from the browser
+- Remembers the last searched city
+- Space Mono is self-hosted via `next/font` (no request to Google Fonts, no font flash)
+- Pinch-zoom re-enabled; `aria-label`s on icon-only buttons
+- Theme preference reads/writes are safe in private browsing
+- Added unit tests (`npm test`) for parsing, timezone handling and input validation
+- ESLint 9 flat config; Replit port-5000 scripts removed
+
+---
+
 ## [0.8.0] — 2026-03-10
 
 ### Fixed

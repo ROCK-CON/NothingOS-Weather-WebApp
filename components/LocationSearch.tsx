@@ -44,9 +44,13 @@ export default function LocationSearch({
       {/* Header with location and controls */}
       <div className="flex items-center justify-between mb-1">
         <motion.button
+          type="button"
           whileTap={{ scale: 0.97 }}
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-2 group"
+          aria-expanded={isOpen}
+          aria-controls="city-search"
+          aria-label={`Current location: ${currentCity}. Change city`}
         >
           {/* Pin icon */}
           <svg
@@ -81,11 +85,13 @@ export default function LocationSearch({
 
         {/* Geolocate button */}
         <motion.button
+          type="button"
           whileTap={{ scale: 0.9 }}
           onClick={onGeolocate}
           disabled={isLocating}
           className="p-2 rounded-xl glass hover:opacity-70 transition-opacity disabled:opacity-50 text-black dark:text-white"
           title="Use current location"
+          aria-label={isLocating ? "Finding your location" : "Use current location"}
         >
           {isLocating ? (
             <svg
@@ -126,11 +132,15 @@ export default function LocationSearch({
             transition={{ duration: 0.2 }}
             style={{ transformOrigin: "top" }}
             className="mt-3 glass rounded-2xl p-4"
+            id="city-search"
           >
-            <form onSubmit={handleSubmit} className="flex gap-2">
+            <form onSubmit={handleSubmit} className="flex gap-2" role="search">
               <input
                 autoFocus
                 type="text"
+                aria-label="City name"
+                maxLength={100}
+                autoComplete="off"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -151,6 +161,7 @@ export default function LocationSearch({
               {["London", "New York", "Tokyo", "Sydney", "Paris"].map(
                 (city) => (
                   <motion.button
+                    type="button"
                     key={city}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { WeatherData } from "@/lib/weather";
+import { formatLocalTime, type WeatherData } from "@/lib/weather";
 
 const RED = "#FF3030";
 
@@ -40,19 +40,17 @@ export function SunriseSunsetCard({
   sunrise,
   sunset,
   now,
+  timezoneOffset,
   className = "",
 }: {
   sunrise: number;
   sunset: number;
   now: number;
+  /** Location's offset from UTC in seconds. */
+  timezoneOffset: number;
   className?: string;
 }) {
-  const fmt = (unix: number) =>
-    new Date(unix * 1000).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+  const fmt = (unix: number) => formatLocalTime(unix, timezoneOffset);
 
   // t clamped 0–1 along the arc
   const t = Math.min(1, Math.max(0, (now - sunrise) / (sunset - sunrise)));
@@ -539,7 +537,14 @@ const AQI_LABELS: Record<number, string> = {
   5: "Very Poor",
 };
 
-export function AirQualityCard({ aqi, className = "" }: { aqi: number; className?: string }) {
+export function AirQualityCard({
+  aqi,
+  className = "",
+}: {
+  /** 1–5, or null when the air quality service didn't respond. */
+  aqi: number | null;
+  className?: string;
+}) {
   const cols = 10;
   const rows = 4;
   const dotR = 3;
@@ -549,7 +554,7 @@ export function AirQualityCard({ aqi, className = "" }: { aqi: number; className
   const startY = 8;
 
   // Columns lit = ceil(aqi / 5 * cols)
-  const litCols = Math.round((aqi / 5) * cols);
+  const litCols = aqi === null ? 0 : Math.round((aqi / 5) * cols);
 
   return (
     <InfoCard delay={0.9} className={`col-span-2 ${className}`}>
@@ -557,9 +562,11 @@ export function AirQualityCard({ aqi, className = "" }: { aqi: number; className
         <CardLabel>Air Quality</CardLabel>
         <span
           className="text-xs font-mono uppercase tracking-widest"
-          style={{ color: aqi <= 2 ? RED : aqi <= 3 ? "#FFA500" : "#FF3030" }}
+          style={{
+            color: aqi === null ? "#8A8A8A" : aqi <= 2 ? RED : aqi <= 3 ? "#FFA500" : "#FF3030",
+          }}
         >
-          {AQI_LABELS[aqi] ?? "—"}
+          {aqi === null ? "Unavailable" : (AQI_LABELS[aqi] ?? "—")}
         </span>
       </div>
       <svg viewBox={`0 0 ${startX * 2 + (cols - 1) * gapX + dotR * 2} ${startY * 2 + (rows - 1) * gapY + dotR * 2}`} className="w-full" style={{ maxHeight: 60 }}>
@@ -581,7 +588,7 @@ export function AirQualityCard({ aqi, className = "" }: { aqi: number; className
       </svg>
       <div className="flex justify-between mt-3">
         <span className="text-[#555555] dark:text-[#8A8A8A] font-mono text-[10px]">
-          AQI {aqi}
+          AQI {aqi ?? "—"}
         </span>
         <span className="text-[#555555] dark:text-[#8A8A8A] font-mono text-[10px]">
           1 – 5
@@ -615,25 +622,6 @@ export function WeatherDetailsCards({
         <VisibilityCard visibility={data.visibility} />
       </div>
       <AirQualityCard aqi={data.aqi} className="flex-1" />
-    </div>
-  );
-}
-
-// ─── Combined export ──────────────────────────────────────────────────────────
-
-export default function WeatherInfoCards({ data }: { data: WeatherData }) {
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <SunriseSunsetCard
-        sunrise={data.sunrise}
-        sunset={data.sunset}
-        now={data.dt}
-      />
-      <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
-      <HumidityCard humidity={data.humidity} />
-      <PressureCard pressure={data.pressure} />
-      <VisibilityCard visibility={data.visibility} />
-      <AirQualityCard aqi={data.aqi} />
     </div>
   );
 }

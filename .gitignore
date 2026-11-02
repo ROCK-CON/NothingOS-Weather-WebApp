@@ -4,11 +4,16 @@ node_modules/
 # Next.js build output
 .next/
 out/
+*.tsbuildinfo
 
 # Environment variables (never commit real keys)
 .env
 .env.local
 .env.*.local
+
+# Hosting platform config that can hold secrets
+.vercel/
+.replit
 
 # Claude Code internal files
 .claude/

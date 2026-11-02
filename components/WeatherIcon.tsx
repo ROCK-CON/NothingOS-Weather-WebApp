@@ -1,9 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { type WeatherCondition } from "@/lib/weather";
-
-const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 interface WeatherIconProps {
   condition: WeatherCondition;
@@ -11,8 +8,7 @@ interface WeatherIconProps {
   className?: string;
 }
 
-// Inline minimal Lottie JSON animations as base64-encoded data URIs
-// We use simple SVG-based fallback icons when lottie files aren't available
+// Lightweight inline SVG icons, one per condition.
 
 function SunIcon({ size }: { size: number }) {
   return (

@@ -1,30 +1,28 @@
 "use client";
 
-import { useRef } from "react";
 import { motion } from "framer-motion";
 import WeatherIcon from "./WeatherIcon";
-import type { HourlyForecastItem } from "@/lib/weather";
+import { formatLocalTime, type HourlyForecastItem } from "@/lib/weather";
 
 interface HourlyForecastProps {
   data: HourlyForecastItem[];
+  /** Location's offset from UTC in seconds, so times show in the city's local time. */
+  timezoneOffset: number;
 }
 
 function HourlyItem({
   item,
   index,
   isNow,
+  timezoneOffset,
 }: {
   item: HourlyForecastItem;
   index: number;
   isNow: boolean;
+  timezoneOffset: number;
 }) {
-  const formatHour = (unix: number) => {
-    if (isNow) return "Now";
-    return new Date(unix * 1000).toLocaleTimeString([], {
-      hour: "2-digit",
-      hour12: false,
-    });
-  };
+  const formatHour = (unix: number) =>
+    isNow ? "Now" : formatLocalTime(unix, timezoneOffset, false);
 
   return (
     <motion.div
@@ -70,9 +68,7 @@ function HourlyItem({
   );
 }
 
-export default function HourlyForecast({ data }: HourlyForecastProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+export default function HourlyForecast({ data, timezoneOffset }: HourlyForecastProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -81,16 +77,15 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
       className="glass rounded-2xl p-5 w-full h-full flex flex-col"
     >
       <h2 className="text-[#555555] dark:text-[#8A8A8A] text-xs font-mono uppercase tracking-widest mb-4 flex-shrink-0">
-        Hourly Forecast
+        Next 24 Hours
       </h2>
       <div
-        ref={scrollRef}
         className="flex gap-1 overflow-x-auto scroll-hidden flex-1 items-center"
         style={{ scrollSnapType: "x mandatory" }}
       >
-        {data.slice(0, 24).map((item, i) => (
+        {data.map((item, i) => (
           <div key={item.time} style={{ scrollSnapAlign: "start" }}>
-            <HourlyItem item={item} index={i} isNow={i === 0} />
+            <HourlyItem item={item} index={i} isNow={i === 0} timezoneOffset={timezoneOffset} />
           </div>
         ))}
       </div>

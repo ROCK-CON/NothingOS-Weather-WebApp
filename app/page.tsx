@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LocationSearch from "@/components/LocationSearch";
 import WeatherCard from "@/components/WeatherCard";
@@ -9,139 +9,121 @@ import WeeklyForecast from "@/components/WeeklyForecast";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ThemeToggle from "@/components/ThemeToggle";
 import DigitalClock from "@/components/DigitalClock";
-import {
-  SunriseSunsetCard,
-  WeatherDetailsCards,
-} from "@/components/WeatherInfoCards";
-import {
-  getCurrentWeather,
-  getForecast,
-  getCurrentWeatherByCoords,
-  getForecastByCoords,
-  type WeatherData,
-  type HourlyForecastItem,
-  type DailyForecastItem,
-} from "@/lib/weather";
+import { SunriseSunsetCard, WeatherDetailsCards } from "@/components/WeatherInfoCards";
+import { formatLocalDate, type WeatherBundle, type WeatherQuery } from "@/lib/weather";
+import { fetchWeather } from "@/lib/weather-client";
 
 const DEFAULT_CITY = "Melbourne,AU";
+const LAST_CITY_KEY = "lastCity";
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-AU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+// localStorage can throw (private browsing, blocked storage) — never let that break the page.
+function readLastCity(): string | null {
+  try {
+    return localStorage.getItem(LAST_CITY_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeLastCity(city: string | null) {
+  try {
+    if (city) localStorage.setItem(LAST_CITY_KEY, city);
+    else localStorage.removeItem(LAST_CITY_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export default function Home() {
-  const [city, setCity] = useState(DEFAULT_CITY);
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [hourly, setHourly] = useState<HourlyForecastItem[]>([]);
-  const [daily, setDaily] = useState<DailyForecastItem[]>([]);
+  const [bundle, setBundle] = useState<WeatherBundle | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
 
-  const loadWeatherByCity = useCallback(async (cityName: string) => {
-    setLoading(true);
-    setError(null);
+  /** Fetch and store weather. Only touches state after the request settles. */
+  const fetchInto = useCallback(async (query: WeatherQuery) => {
+    // Cancel any in-flight lookup so a slow earlier response can't overwrite a newer one.
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+
     try {
-      const [weatherData, forecastData] = await Promise.all([
-        getCurrentWeather(cityName),
-        getForecast(cityName),
-      ]);
-      const nowItem: HourlyForecastItem = {
-        time: weatherData.dt,
-        temperature: weatherData.temperature,
-        condition: weatherData.condition,
-        icon: weatherData.icon,
-        description: weatherData.description,
-        precipitation: 0,
-      };
-      const futureHourly = forecastData.hourly.filter((item) => item.time > weatherData.dt);
-      setWeather(weatherData);
-      setHourly([nowItem, ...futureHourly]);
-      setDaily(forecastData.daily);
-      setCity(weatherData.city);
-    } catch {
-      setError("Could not load weather data");
+      const data = await fetchWeather(query, controller.signal);
+      if (controller.signal.aborted) return;
+      setBundle(data);
+      // Remember explicit city searches; a location lookup clears the preference.
+      writeLastCity(
+        "city" in query ? `${data.current.city},${data.current.country}` : null
+      );
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      setError(err instanceof Error ? err.message : "Could not load weather data");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
-  const handleGeolocate = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser");
-      return;
-    }
+  /** User-initiated lookup: show the skeleton, clear any old error, then fetch. */
+  const load = useCallback(
+    (query: WeatherQuery) => {
+      setLoading(true);
+      setError(null);
+      fetchInto(query);
+    },
+    [fetchInto]
+  );
 
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setLoading(true);
-        setError(null);
-        try {
-          const [weatherData, forecastData] = await Promise.all([
-            getCurrentWeatherByCoords(latitude, longitude),
-            getForecastByCoords(latitude, longitude),
-          ]);
-          const nowItem: HourlyForecastItem = {
-            time: weatherData.dt,
-            temperature: weatherData.temperature,
-            condition: weatherData.condition,
-            icon: weatherData.icon,
-            description: weatherData.description,
-            precipitation: 0,
-          };
-          const futureHourly = forecastData.hourly.filter((item) => item.time > weatherData.dt);
-          setWeather(weatherData);
-          setHourly([nowItem, ...futureHourly]);
-          setDaily(forecastData.daily);
-          setCity(weatherData.city);
-        } catch {
-          setError("Could not load weather for your location");
-        } finally {
-          setLoading(false);
-          setIsLocating(false);
-        }
-      },
-      () => {
-        setError("Location access denied");
+  /** Look up the device location; if that isn't possible, use `fallbackCity` (if given). */
+  const locate = useCallback(
+    (fallbackCity?: string) => {
+      const fail = (message: string) => {
         setIsLocating(false);
-      },
-      { timeout: 10000, maximumAge: 300000 }
-    );
-  }, []);
+        if (fallbackCity) load({ city: fallbackCity });
+        else setError(message);
+      };
 
-  // Auto-geolocate on first load if permission already granted
+      if (!navigator.geolocation) {
+        fail("Geolocation is not supported by your browser");
+        return;
+      }
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setIsLocating(false);
+          load({ lat: position.coords.latitude, lon: position.coords.longitude });
+        },
+        () => fail("Location access denied or unavailable"),
+        { timeout: 10000, maximumAge: 300000 }
+      );
+    },
+    [load]
+  );
+
+  // First load: last searched city → device location (if already permitted) → default city.
+  // State already starts as "loading", so this only needs to fetch.
   useEffect(() => {
-    if (navigator.permissions) {
+    const lastCity = readLastCity();
+    if (lastCity || !navigator.permissions) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchInto only sets state after the request settles
+      fetchInto({ city: lastCity ?? DEFAULT_CITY });
+    } else {
       navigator.permissions
         .query({ name: "geolocation" })
-        .then((result) => {
-          if (result.state === "granted") {
-            handleGeolocate();
-          } else {
-            loadWeatherByCity(DEFAULT_CITY);
-          }
-        })
-        .catch(() => {
-          loadWeatherByCity(DEFAULT_CITY);
-        });
-    } else {
-      loadWeatherByCity(DEFAULT_CITY);
+        .then((result) =>
+          result.state === "granted" ? locate(DEFAULT_CITY) : fetchInto({ city: DEFAULT_CITY })
+        )
+        .catch(() => fetchInto({ city: DEFAULT_CITY }));
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => requestRef.current?.abort();
+  }, [fetchInto, locate]);
 
-  const handleCityChange = useCallback(
-    (newCity: string) => {
-      setCity(newCity);
-      loadWeatherByCity(newCity);
-    },
-    [loadWeatherByCity]
-  );
+  const handleCityChange = useCallback((city: string) => load({ city }), [load]);
+  const handleGeolocate = useCallback(() => locate(), [locate]);
+
+  const weather = bundle?.current ?? null;
+  // The observation time (minutes old at most) gives the location's current date.
+  const dateLabel = weather ? formatLocalDate(weather.dt, weather.timezoneOffset) : "";
 
   return (
     <main className="min-h-screen bg-[#f5f5f5] dark:bg-black dot-matrix transition-colors duration-300">
@@ -155,15 +137,18 @@ export default function Home() {
         >
           <div className="flex items-center justify-between gap-4">
             <LocationSearch
-              currentCity={city}
+              currentCity={weather?.city ?? "—"}
               onCityChange={handleCityChange}
               onGeolocate={handleGeolocate}
               isLocating={isLocating}
             />
             <ThemeToggle />
           </div>
-          <p className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase">
-            {formatDate(new Date())}
+          <p className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase min-h-4">
+            {dateLabel}
+            {bundle?.mock && (
+              <span className="ml-3 text-[#FF3030]">· Demo data (no API key)</span>
+            )}
           </p>
         </motion.div>
 
@@ -171,6 +156,7 @@ export default function Home() {
         <AnimatePresence>
           {error && (
             <motion.div
+              role="alert"
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -183,6 +169,7 @@ export default function Home() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
+                aria-hidden="true"
               >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -204,7 +191,7 @@ export default function Home() {
             >
               <LoadingSkeleton />
             </motion.div>
-          ) : weather ? (
+          ) : bundle && weather ? (
             <motion.div
               key="content"
               initial={{ opacity: 0 }}
@@ -215,16 +202,14 @@ export default function Home() {
                 Unified CSS Grid — 1 column on mobile, 2 columns on desktop.
 
                 Mobile: items stack in `order-*` sequence:
-                  1 Clock → 2 Weather → 3 Hourly → 4 10-Day → 5 Sunrise/Sunset → 6 Details
+                  1 Clock → 2 Weather → 3 Hourly → 4 5-Day → 5 Sunrise/Sunset → 6 Details
 
-                Desktop (lg): items explicitly placed with col-start / row-start,
-                reproducing the original 3-row × 2-col layout with alignment intact:
-                  Row 1: WeatherCard (col 1) | Clock (col 2)       — self-start
-                  Row 2: SunriseSunset (col 1) | Hourly (col 2)    — stretch (Hourly sets height)
-                  Row 3: DetailCards (col 1)  | 10-Day (col 2)     — stretch
+                Desktop (lg): items explicitly placed with col-start / row-start:
+                  Row 1: WeatherCard (col 1)   | Clock (col 2)   — self-start
+                  Row 2: SunriseSunset (col 1) | Hourly (col 2)  — stretch (Hourly sets height)
+                  Row 3: DetailCards (col 1)   | 5-Day (col 2)   — stretch
               */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
                 {/* ── Clock ── mobile 1 · desktop col 2, row 1 */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -232,7 +217,7 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="order-1 lg:col-start-2 lg:row-start-1 lg:self-start"
                 >
-                  <DigitalClock timezoneOffset={weather?.timezoneOffset} />
+                  <DigitalClock timezoneOffset={weather.timezoneOffset} />
                 </motion.div>
 
                 {/* ── Weather card ── mobile 2 · desktop col 1, row 1 */}
@@ -242,13 +227,13 @@ export default function Home() {
 
                 {/* ── Hourly forecast ── mobile 3 · desktop col 2, row 2 */}
                 <div className="order-3 lg:col-start-2 lg:row-start-2">
-                  <HourlyForecast data={hourly} />
+                  <HourlyForecast data={bundle.hourly} timezoneOffset={weather.timezoneOffset} />
                 </div>
 
-                {/* ── 10-Day forecast ── mobile 4 · desktop col 2, row 3 */}
+                {/* ── 5-Day forecast ── mobile 4 · desktop col 2, row 3 */}
                 {/* Direct grid child: align-self:stretch fills the row height set by the left column */}
                 <WeeklyForecast
-                  data={daily}
+                  data={bundle.daily}
                   className="order-4 lg:col-start-2 lg:row-start-3"
                 />
 
@@ -258,6 +243,7 @@ export default function Home() {
                     sunrise={weather.sunrise}
                     sunset={weather.sunset}
                     now={weather.dt}
+                    timezoneOffset={weather.timezoneOffset}
                   />
                 </div>
 
@@ -267,7 +253,6 @@ export default function Home() {
                   data={weather}
                   className="order-6 lg:col-start-1 lg:row-start-3"
                 />
-
               </div>
             </motion.div>
           ) : null}
@@ -284,7 +269,7 @@ export default function Home() {
             Nothing Weather
           </span>
           <span className="text-black/10 dark:text-white/10 font-mono text-[10px]">
-            {weather?.city && `${weather.city}, ${weather.country}`}
+            {weather && `${weather.city}, ${weather.country}`}
           </span>
         </motion.div>
       </div>

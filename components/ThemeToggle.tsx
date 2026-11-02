@@ -1,31 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 
-export default function ThemeToggle() {
-  const [dark, setDark] = useState(true);
+// The <html> "dark" class is the single source of truth (set before paint by the
+// inline script in layout.tsx), so read it directly rather than mirroring it in state.
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
+const isDarkNow = () => document.documentElement.classList.contains("dark");
+const isDarkOnServer = () => true;
 
-  useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    const isDark = stored ? stored === "dark" : true;
-    setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
-  }, []);
+export default function ThemeToggle() {
+  const dark = useSyncExternalStore(subscribe, isDarkNow, isDarkOnServer);
 
   const toggle = () => {
     const next = !dark;
-    setDark(next);
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
+    try {
+      localStorage.setItem("theme", next ? "dark" : "light");
+    } catch {
+      // Storage unavailable (e.g. private browsing) — theme still switches for this visit.
+    }
   };
+
+  const label = dark ? "Switch to light mode" : "Switch to dark mode";
 
   return (
     <motion.button
+      type="button"
       whileTap={{ scale: 0.9 }}
       onClick={toggle}
       className="p-2 rounded-xl glass flex-shrink-0 text-black dark:text-white hover:opacity-70 transition-opacity"
-      title={dark ? "Switch to light mode" : "Switch to dark mode"}
+      title={label}
+      aria-label={label}
     >
       {dark ? (
         /* Sun — shown in dark mode to switch to light */
@@ -37,6 +47,7 @@ export default function ThemeToggle() {
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
+          aria-hidden="true"
         >
           <circle cx="12" cy="12" r="5" />
           <line x1="12" y1="1" x2="12" y2="3" />
@@ -58,6 +69,7 @@ export default function ThemeToggle() {
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
+          aria-hidden="true"
         >
           <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
         </svg>

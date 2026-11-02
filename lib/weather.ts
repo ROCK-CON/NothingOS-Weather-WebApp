@@ -1,44 +1,9 @@
-export interface WeatherData {
-  city: string;
-  country: string;
-  temperature: number;
-  feelsLike: number;
-  description: string;
-  condition: WeatherCondition;
-  humidity: number;
-  windSpeed: number;
-  windDeg: number;
-  visibility: number;
-  pressure: number;
-  icon: string;
-  sunrise: number;
-  sunset: number;
-  dt: number;
-  aqi: number;
-  lat: number;
-  lon: number;
-  timezoneOffset: number;
-}
+// Shared weather types and pure helpers.
+//
+// This module deliberately has no imports so it can run unchanged in the
+// browser, in the API route, and directly under `node --test`.
 
-export interface HourlyForecastItem {
-  time: number;
-  temperature: number;
-  condition: WeatherCondition;
-  icon: string;
-  description: string;
-  precipitation: number;
-}
-
-export interface DailyForecastItem {
-  date: number;
-  dayName: string;
-  high: number;
-  low: number;
-  condition: WeatherCondition;
-  icon: string;
-  description: string;
-  precipitation: number;
-}
+// ─── App types ────────────────────────────────────────────────────────────────
 
 export type WeatherCondition =
   | "clear"
@@ -50,253 +15,307 @@ export type WeatherCondition =
   | "mist"
   | "drizzle";
 
-function mapCondition(weatherId: number, icon: string): WeatherCondition {
+export interface WeatherData {
+  city: string;
+  country: string;
+  temperature: number;
+  feelsLike: number;
+  description: string;
+  condition: WeatherCondition;
+  humidity: number;
+  /** km/h */
+  windSpeed: number;
+  windDeg: number;
+  /** metres */
+  visibility: number;
+  pressure: number;
+  icon: string;
+  sunrise: number;
+  sunset: number;
+  dt: number;
+  /** OpenWeatherMap air quality index 1–5, or null when unavailable. */
+  aqi: number | null;
+  lat: number;
+  lon: number;
+  /** Seconds east of UTC for the location. */
+  timezoneOffset: number;
+}
+
+export interface HourlyForecastItem {
+  time: number;
+  temperature: number;
+  condition: WeatherCondition;
+  icon: string;
+  description: string;
+  /** Chance of precipitation, 0–100. */
+  precipitation: number;
+}
+
+export interface DailyForecastItem {
+  date: number;
+  dayName: string;
+  high: number;
+  low: number;
+  condition: WeatherCondition;
+  icon: string;
+  description: string;
+  /** Highest chance of precipitation during the day, 0–100. */
+  precipitation: number;
+}
+
+export interface WeatherBundle {
+  current: WeatherData;
+  hourly: HourlyForecastItem[];
+  daily: DailyForecastItem[];
+  /** True only for local development sample data. */
+  mock?: boolean;
+}
+
+export type WeatherQuery = { city: string } | { lat: number; lon: number };
+
+// ─── OpenWeatherMap response shapes (only the fields we use) ─────────────────
+
+interface OwmCondition {
+  id: number;
+  description: string;
+  icon: string;
+}
+
+export interface OwmCurrent {
+  name: string;
+  dt: number;
+  timezone: number;
+  visibility?: number;
+  coord: { lat: number; lon: number };
+  main: { temp: number; feels_like: number; humidity: number; pressure: number };
+  wind?: { speed?: number; deg?: number };
+  sys: { country?: string; sunrise: number; sunset: number };
+  weather: OwmCondition[];
+}
+
+export interface OwmForecastItem {
+  dt: number;
+  main: { temp: number };
+  weather: OwmCondition[];
+  pop?: number;
+}
+
+export interface OwmForecast {
+  list: OwmForecastItem[];
+}
+
+export interface OwmAir {
+  list?: Array<{ main?: { aqi?: number } }>;
+}
+
+// ─── Query validation ────────────────────────────────────────────────────────
+
+const MAX_CITY_LENGTH = 100;
+// Letters (any language), spaces and the punctuation real place names use,
+// e.g. "Melbourne,AU", "St. John's", "Saint-Étienne".
+const CITY_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}\s.,'’-]*$/u;
+
+/** Validate `?city=` or `?lat=&lon=` search params. Returns an error message on failure. */
+export function parseWeatherQuery(params: URLSearchParams): WeatherQuery | { error: string } {
+  const rawCity = params.get("city");
+  if (rawCity !== null) {
+    const city = rawCity.trim().replace(/\s+/g, " ");
+    if (!city) return { error: "City is required" };
+    if (city.length > MAX_CITY_LENGTH) return { error: "City name is too long" };
+    if (!CITY_PATTERN.test(city)) return { error: "City name contains invalid characters" };
+    return { city };
+  }
+
+  const rawLat = params.get("lat");
+  const rawLon = params.get("lon");
+  const lat = Number(rawLat);
+  const lon = Number(rawLon);
+  if (
+    !rawLat ||
+    !rawLon ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    Math.abs(lat) > 90 ||
+    Math.abs(lon) > 180
+  ) {
+    return { error: "A city or valid coordinates are required" };
+  }
+  // ~1 km precision: plenty for weather, improves caching, and avoids passing
+  // the visitor's exact position upstream.
+  return { lat: roundTo(lat, 2), lon: roundTo(lon, 2) };
+}
+
+function roundTo(value: number, places: number): number {
+  const f = 10 ** places;
+  return Math.round(value * f) / f;
+}
+
+// ─── Time helpers (always in the location's timezone, never the device's) ────
+
+/** Shift a unix timestamp into the location's local time. Read it back with getUTC* methods only. */
+export function toLocalDate(unix: number, offsetSec: number): Date {
+  return new Date((unix + offsetSec) * 1000);
+}
+
+/** "HH:MM" (or "HH" when `withMinutes` is false) in the location's local time. */
+export function formatLocalTime(unix: number, offsetSec: number, withMinutes = true): string {
+  return toLocalDate(unix, offsetSec).toLocaleTimeString("en-AU", {
+    hour: "2-digit",
+    minute: withMinutes ? "2-digit" : undefined,
+    hourCycle: "h23", // `hour12: false` renders midnight as "24" in some browsers
+    timeZone: "UTC",
+  });
+}
+
+/** e.g. "Monday 2 November" in the location's local time. */
+export function formatLocalDate(unix: number, offsetSec: number): string {
+  return toLocalDate(unix, offsetSec).toLocaleDateString("en-AU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+function localDayKey(unix: number, offsetSec: number): string {
+  return toLocalDate(unix, offsetSec).toISOString().slice(0, 10);
+}
+
+function localHour(unix: number, offsetSec: number): number {
+  return toLocalDate(unix, offsetSec).getUTCHours();
+}
+
+// ─── Parsing ──────────────────────────────────────────────────────────────────
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export function mapCondition(weatherId: number): WeatherCondition {
   if (weatherId >= 200 && weatherId < 300) return "thunderstorm";
   if (weatherId >= 300 && weatherId < 400) return "drizzle";
   if (weatherId >= 500 && weatherId < 600) return "rain";
   if (weatherId >= 600 && weatherId < 700) return "snow";
   if (weatherId >= 700 && weatherId < 800) return "mist";
-  if (weatherId === 800) return "clear";
   if (weatherId === 801 || weatherId === 802) return "partly-cloudy";
   if (weatherId >= 803) return "cloudy";
   return "clear";
 }
 
-const mockCurrentWeather: WeatherData = {
-  city: "Melbourne",
-  country: "AU",
-  temperature: 22,
-  feelsLike: 20,
-  description: "Partly Cloudy",
-  condition: "partly-cloudy",
-  humidity: 58,
-  windSpeed: 14,
-  windDeg: 275,
-  visibility: 10000,
-  pressure: 1015,
-  icon: "02d",
-  sunrise: Date.now() / 1000 - 3600 * 4,
-  sunset: Date.now() / 1000 + 3600 * 4,
-  dt: Date.now() / 1000,
-  aqi: 2,
-  lat: -37.8136,
-  lon: 144.9631,
-  timezoneOffset: 36000,
-};
-
-const mockHourly: HourlyForecastItem[] = Array.from({ length: 24 }, (_, i) => {
-  const conditions: WeatherCondition[] = [
-    "partly-cloudy",
-    "cloudy",
-    "rain",
-    "partly-cloudy",
-    "clear",
-    "cloudy",
-  ];
-  const icons = ["02d", "03d", "10d", "02d", "01d", "03d"];
-  const idx = i % conditions.length;
-  return {
-    time: Date.now() / 1000 + i * 3600,
-    temperature: Math.round(18 + Math.sin((i * Math.PI) / 12) * 6),
-    condition: conditions[idx],
-    icon: icons[idx],
-    description: conditions[idx].replace("-", " "),
-    precipitation: idx === 2 ? 0.8 : 0,
-  };
-});
-
-const mockDaily: DailyForecastItem[] = (() => {
-  const days = [
-    "Sun",
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat",
-  ];
-  const conditions: WeatherCondition[] = [
-    "partly-cloudy",
-    "rain",
-    "cloudy",
-    "clear",
-    "thunderstorm",
-    "clear",
-    "partly-cloudy",
-    "rain",
-    "cloudy",
-    "clear",
-  ];
-  const icons = ["02d", "10d", "03d", "01d", "11d", "01d", "02d", "10d", "03d", "01d"];
-  const now = new Date();
-
-  return Array.from({ length: 10 }, (_, i) => {
-    const date = new Date(now);
-    date.setDate(now.getDate() + i);
-    return {
-      date: date.getTime() / 1000,
-      dayName: i === 0 ? "Today" : days[date.getDay()],
-      high: Math.round(20 + Math.random() * 8),
-      low: Math.round(12 + Math.random() * 5),
-      condition: conditions[i],
-      icon: icons[i],
-      description: conditions[i].replace("-", " "),
-      precipitation: [0, 0.9, 0.4, 0, 0.7, 0, 0.1, 0.6, 0.2, 0][i],
-    };
-  });
-})();
-
-async function fetchFromApi(endpoint: string, params: Record<string, string>) {
-  const url = new URL("/api/weather", window.location.origin);
-  url.searchParams.set("endpoint", endpoint);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || `API error: ${response.status}`);
-  }
-  return response.json();
+function capitalise(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function parseWeatherResponse(data: Record<string, unknown>): WeatherData {
-  const main = data.main as Record<string, number>;
-  const wind = data.wind as Record<string, number>;
-  const sys = data.sys as Record<string, unknown>;
-  const coord = data.coord as Record<string, number>;
-  const weatherArr = data.weather as Array<Record<string, unknown>>;
-  const w = weatherArr[0];
+function toPercent(pop: number | undefined): number {
+  return Math.round((pop ?? 0) * 100);
+}
 
+/** AQI 1–5 from the Air Pollution API, or null if missing/invalid. */
+export function aqiFromAir(air: OwmAir | null): number | null {
+  const aqi = air?.list?.[0]?.main?.aqi;
+  return typeof aqi === "number" && aqi >= 1 && aqi <= 5 ? aqi : null;
+}
+
+export function parseCurrent(data: OwmCurrent, aqi: number | null): WeatherData {
+  const w = data.weather[0];
   return {
-    city: data.name as string,
-    country: sys.country as string,
-    temperature: Math.round(main.temp),
-    feelsLike: Math.round(main.feels_like),
-    description:
-      (w.description as string).charAt(0).toUpperCase() +
-      (w.description as string).slice(1),
-    condition: mapCondition(w.id as number, w.icon as string),
-    humidity: main.humidity,
-    windSpeed: Math.round((wind.speed ?? 0) * 3.6),
-    windDeg: wind.deg ?? 0,
-    visibility: data.visibility as number,
-    pressure: main.pressure,
-    icon: w.icon as string,
-    sunrise: (sys.sunrise as number),
-    sunset: (sys.sunset as number),
-    dt: data.dt as number,
-    aqi: 1,
-    lat: coord.lat,
-    lon: coord.lon,
-    timezoneOffset: data.timezone as number,
+    city: data.name,
+    country: data.sys.country ?? "",
+    temperature: Math.round(data.main.temp),
+    feelsLike: Math.round(data.main.feels_like),
+    description: capitalise(w.description),
+    condition: mapCondition(w.id),
+    humidity: data.main.humidity,
+    windSpeed: Math.round((data.wind?.speed ?? 0) * 3.6), // m/s → km/h
+    windDeg: data.wind?.deg ?? 0,
+    visibility: data.visibility ?? 10000,
+    pressure: data.main.pressure,
+    icon: w.icon,
+    sunrise: data.sys.sunrise,
+    sunset: data.sys.sunset,
+    dt: data.dt,
+    aqi,
+    lat: data.coord.lat,
+    lon: data.coord.lon,
+    timezoneOffset: data.timezone,
   };
 }
 
-function parseForecastResponse(data: Record<string, unknown>): {
-  hourly: HourlyForecastItem[];
-  daily: DailyForecastItem[];
-} {
-  const items = (data.list as Array<Record<string, unknown>>);
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/**
+ * "Now" followed by the next `slots` forecast points. The free forecast is in
+ * 3-hour steps, so the default 8 slots covers the next 24 hours.
+ */
+export function parseHourly(
+  forecast: OwmForecast,
+  current: WeatherData,
+  slots = 8
+): HourlyForecastItem[] {
+  const upcoming = forecast.list.filter((item) => item.dt > current.dt).slice(0, slots);
+  const now: HourlyForecastItem = {
+    time: current.dt,
+    temperature: current.temperature,
+    condition: current.condition,
+    icon: current.icon,
+    description: current.description,
+    precipitation: toPercent(upcoming[0]?.pop),
+  };
+  return [
+    now,
+    ...upcoming.map((item) => {
+      const w = item.weather[0];
+      return {
+        time: item.dt,
+        temperature: Math.round(item.main.temp),
+        condition: mapCondition(w.id),
+        icon: w.icon,
+        description: w.description,
+        precipitation: toPercent(item.pop),
+      };
+    }),
+  ];
+}
 
-  const hourly: HourlyForecastItem[] = items.slice(0, 24).map((item) => {
-    const main = item.main as Record<string, number>;
-    const weatherArr = item.weather as Array<Record<string, unknown>>;
-    const w = weatherArr[0];
-    return {
-      time: item.dt as number,
-      temperature: Math.round(main.temp),
-      condition: mapCondition(w.id as number, w.icon as string),
-      icon: w.icon as string,
-      description: w.description as string,
-      precipitation: Math.round((item.pop as number) * 100),
-    };
-  });
+/** Group 3-hourly points into calendar days in the location's timezone. */
+export function parseDaily(
+  forecast: OwmForecast,
+  current: WeatherData,
+  maxDays = 6
+): DailyForecastItem[] {
+  const offset = current.timezoneOffset;
+  const todayKey = localDayKey(current.dt, offset);
 
-  const dayMap = new Map<string, Array<Record<string, unknown>>>();
-  items.forEach((item) => {
-    const date = new Date((item.dt as number) * 1000);
-    const key = date.toDateString();
-    if (!dayMap.has(key)) dayMap.set(key, []);
-    dayMap.get(key)!.push(item);
-  });
+  const groups = new Map<string, OwmForecastItem[]>();
+  for (const item of forecast.list) {
+    const key = localDayKey(item.dt, offset);
+    const group = groups.get(key);
+    if (group) group.push(item);
+    else groups.set(key, [item]);
+  }
 
-  const daily: DailyForecastItem[] = [];
-  let i = 0;
-  dayMap.forEach((dayItems) => {
-    if (daily.length >= 10) return;
-    const temps = dayItems.map((d) => (d.main as Record<string, number>).temp);
-    const midday = dayItems[Math.floor(dayItems.length / 2)];
-    const date = new Date((midday.dt as number) * 1000);
-    const middayWeather = (midday.weather as Array<Record<string, unknown>>)[0];
-    daily.push({
-      date: midday.dt as number,
-      dayName: i === 0 ? "Today" : dayNames[date.getDay()],
+  const days: DailyForecastItem[] = [];
+  for (const [key, items] of groups) {
+    if (days.length >= maxDays) break;
+    const isToday = key === todayKey;
+
+    const temps = items.map((item) => item.main.temp);
+    if (isToday) temps.push(current.temperature);
+
+    // Represent the day by the point closest to midday.
+    const midday = items.reduce((best, item) =>
+      Math.abs(localHour(item.dt, offset) - 12) < Math.abs(localHour(best.dt, offset) - 12)
+        ? item
+        : best
+    );
+    const w = midday.weather[0];
+
+    days.push({
+      date: midday.dt,
+      dayName: isToday ? "Today" : DAY_NAMES[toLocalDate(midday.dt, offset).getUTCDay()],
       high: Math.round(Math.max(...temps)),
       low: Math.round(Math.min(...temps)),
-      condition: mapCondition(middayWeather.id as number, middayWeather.icon as string),
-      icon: middayWeather.icon as string,
-      description: middayWeather.description as string,
-      precipitation: Math.round((midday.pop as number) * 100),
+      condition: isToday ? current.condition : mapCondition(w.id),
+      icon: isToday ? current.icon : w.icon,
+      description: isToday ? current.description : w.description,
+      precipitation: toPercent(Math.max(...items.map((item) => item.pop ?? 0))),
     });
-    i++;
-  });
-
-  return { hourly, daily };
-}
-
-export async function getCurrentWeather(city: string): Promise<WeatherData> {
-  try {
-    const data = await fetchFromApi("weather", { city });
-    return parseWeatherResponse(data);
-  } catch {
-    console.warn("API error – using mock data");
-    return { ...mockCurrentWeather, city };
   }
-}
-
-export async function getCurrentWeatherByCoords(
-  lat: number,
-  lon: number
-): Promise<WeatherData> {
-  try {
-    const data = await fetchFromApi("weather", {
-      lat: lat.toString(),
-      lon: lon.toString(),
-    });
-    return parseWeatherResponse(data);
-  } catch {
-    return mockCurrentWeather;
-  }
-}
-
-export async function getForecast(city: string): Promise<{
-  hourly: HourlyForecastItem[];
-  daily: DailyForecastItem[];
-}> {
-  try {
-    const data = await fetchFromApi("forecast", { city });
-    return parseForecastResponse(data);
-  } catch {
-    return { hourly: mockHourly, daily: mockDaily };
-  }
-}
-
-export async function getForecastByCoords(
-  lat: number,
-  lon: number
-): Promise<{
-  hourly: HourlyForecastItem[];
-  daily: DailyForecastItem[];
-}> {
-  try {
-    const data = await fetchFromApi("forecast", {
-      lat: lat.toString(),
-      lon: lon.toString(),
-    });
-    return parseForecastResponse(data);
-  } catch {
-    return { hourly: mockHourly, daily: mockDaily };
-  }
+  return days;
 }

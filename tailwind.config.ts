@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        mono: ["Space Mono", "IBM Plex Mono", "Courier New", "monospace"],
+        mono: ["var(--font-space-mono)", "IBM Plex Mono", "Courier New", "monospace"],
       },
       colors: {
         background: "#000000",
