@@ -8,6 +8,14 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.9.1] — 2026-11-02
+
+### Changed
+- **Default city is now Hobart, AU** (shown on a first visit; after that the last searched city is remembered)
+- **Server runs in Sydney** (`syd1`, via `vercel.json`) instead of US East, so weather lookups from Australia make a much shorter round trip
+
+---
+
 ## [0.9.0] — 2026-11-02
 
 Security review and migration from Replit to Vercel.

@@ -13,7 +13,7 @@ import { SunriseSunsetCard, WeatherDetailsCards } from "@/components/WeatherInfo
 import { formatLocalDate, type WeatherBundle, type WeatherQuery } from "@/lib/weather";
 import { fetchWeather } from "@/lib/weather-client";
 
-const DEFAULT_CITY = "Melbourne,AU";
+const DEFAULT_CITY = "Hobart,AU";
 const LAST_CITY_KEY = "lastCity";
 
 // localStorage can throw (private browsing, blocked storage) — never let that break the page.

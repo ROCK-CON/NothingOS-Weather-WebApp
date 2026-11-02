@@ -20,7 +20,7 @@ export function mockBundle(label: string): WeatherBundle {
   const tz = 36000; // UTC+10
 
   const current: WeatherData = {
-    city: label.split(",")[0].trim(), // "Melbourne,AU" → "Melbourne", like the real API
+    city: label.split(",")[0].trim(), // "Hobart,AU" → "Hobart", like the real API
 
     country: "AU",
     temperature: 22,
@@ -37,8 +37,8 @@ export function mockBundle(label: string): WeatherBundle {
     sunset: now + 4 * 3600,
     dt: now,
     aqi: 2,
-    lat: -37.81,
-    lon: 144.96,
+    lat: -42.88,
+    lon: 147.33,
     timezoneOffset: tz,
   };
 
