@@ -3,7 +3,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   aqiFromAir,
+  formatAmount,
   formatLocalTime,
+  isNightIcon,
+  isNotableGust,
   mapCondition,
   parseCurrent,
   parseDaily,
@@ -12,6 +15,7 @@ import {
   type OwmCurrent,
   type OwmForecast,
 } from "../lib/weather.ts";
+import { cityKey, parseSaved } from "../lib/saved-cities.ts";
 
 const HOUR = 3600;
 const TOKYO = 9 * HOUR; // UTC+9
@@ -131,4 +135,56 @@ test("parseWeatherQuery validates and normalises input", () => {
   assert.ok("error" in q("lat=abc&lon=1"));
   assert.ok("error" in q("lat=1"));
   assert.ok("error" in q(""));
+});
+
+test("rain and snow amounts: per 3-hour block, daily totals, snow flag", () => {
+  const cur = parseCurrent(current(), 1);
+  const list = forecast(16).list.map((item, i) => ({
+    ...item,
+    rain: i === 0 ? { "3h": 2.44 } : i === 1 ? { "3h": 0.3 } : undefined,
+    snow: i === 9 ? { "3h": 5 } : undefined,
+    wind: { speed: 5, gust: i === 0 ? 15 : undefined },
+  }));
+  const hourly = parseHourly({ list }, cur);
+  assert.equal(hourly[1].amount, 2.4);
+  assert.equal(hourly[0].amount, 2.4); // "Now" borrows the next block's amount
+  assert.equal(hourly[1].gust, 54); // 15 m/s → 54 km/h
+  assert.equal(hourly[2].gust, null); // not reported → null, never 0
+  assert.equal(hourly[3].amount, 0);
+
+  const daily = parseDaily({ list }, cur);
+  assert.equal(daily[0].amount, 2.7); // 2.44 + 0.3 on the first local day
+  assert.equal(daily[0].snow, false);
+  const snowDay = daily.find((d) => d.snow);
+  assert.ok(snowDay && snowDay.amount === 5);
+  // Each day carries its own 3-hourly points for the expanded view.
+  assert.equal(daily.reduce((n, d) => n + d.hours.length, 0), 16);
+  assert.ok(daily[0].hours.every((h) => h.time > cur.dt));
+});
+
+test("current gusts are converted, and missing gusts stay null", () => {
+  assert.equal(parseCurrent(current({ wind: { speed: 5, deg: 0, gust: 12.5 } }), 1).windGust, 45);
+  assert.equal(parseCurrent(current({ wind: { speed: 5, deg: 0 } }), 1).windGust, null);
+});
+
+test("formatAmount, isNotableGust and isNightIcon", () => {
+  assert.equal(formatAmount(0), "");
+  assert.equal(formatAmount(0.2), "<1 mm");
+  assert.equal(formatAmount(2.4), "2.4 mm");
+  assert.equal(formatAmount(12.6), "13 mm");
+  assert.equal(isNotableGust(14, 45), true);
+  assert.equal(isNotableGust(14, 20), false); // not strong
+  assert.equal(isNotableGust(40, 50), false); // not well above average
+  assert.equal(isNotableGust(14, null), false);
+  assert.equal(isNightIcon("01n"), true);
+  assert.equal(isNightIcon("01d"), false);
+});
+
+test("saved cities are parsed defensively and matched loosely", () => {
+  assert.deepEqual(parseSaved('["Hobart,AU","Melbourne,AU"]'), ["Hobart,AU", "Melbourne,AU"]);
+  assert.deepEqual(parseSaved("not json"), []);
+  assert.deepEqual(parseSaved('{"a":1}'), []);
+  assert.deepEqual(parseSaved('["ok",5,"",null]'), ["ok"]);
+  assert.equal(parseSaved(JSON.stringify(Array(20).fill("X"))).length, 8);
+  assert.equal(cityKey("Hobart, AU"), cityKey("hobart,au"));
 });

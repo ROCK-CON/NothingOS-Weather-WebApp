@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LocationSearch from "@/components/LocationSearch";
 import WeatherCard from "@/components/WeatherCard";
@@ -9,12 +9,26 @@ import WeeklyForecast from "@/components/WeeklyForecast";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ThemeToggle from "@/components/ThemeToggle";
 import DigitalClock from "@/components/DigitalClock";
+import UpdatedAgo from "@/components/UpdatedAgo";
+import SavedCities from "@/components/SavedCities";
 import { SunriseSunsetCard, WeatherDetailsCards } from "@/components/WeatherInfoCards";
 import { formatLocalDate, type WeatherBundle, type WeatherQuery } from "@/lib/weather";
 import { fetchWeather } from "@/lib/weather-client";
+import {
+  cityKey,
+  getSavedServerSnapshot,
+  getSavedSnapshot,
+  MAX_SAVED_CITIES,
+  parseSaved,
+  subscribeSaved,
+  toggleSaved,
+} from "@/lib/saved-cities";
 
 const DEFAULT_CITY = "Hobart,AU";
 const LAST_CITY_KEY = "lastCity";
+// The API caches each city for 10 minutes, so refreshing more often gains nothing.
+const REFRESH_MS = 10 * 60 * 1000;
+const REFRESH_CHECK_MS = 60 * 1000;
 
 // localStorage can throw (private browsing, blocked storage) — never let that break the page.
 function readLastCity(): string | null {
@@ -39,30 +53,56 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshFailed, setRefreshFailed] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef(false);
+  // What's on screen, so a background refresh re-fetches the same place.
+  const lastQueryRef = useRef<WeatherQuery | null>(null);
+  const lastFetchRef = useRef(0);
 
-  /** Fetch and store weather. Only touches state after the request settles. */
-  const fetchInto = useCallback(async (query: WeatherQuery) => {
+  /**
+   * Fetch and store weather. Only touches state after the request settles.
+   * A `silent` (background) refresh keeps the current data on failure and
+   * flags it in the "Updated" line instead of showing the error banner.
+   */
+  const fetchInto = useCallback(async (query: WeatherQuery, silent = false) => {
     // Cancel any in-flight lookup so a slow earlier response can't overwrite a newer one.
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
+    inFlightRef.current = true;
 
     try {
       const data = await fetchWeather(query, controller.signal);
       if (controller.signal.aborted) return;
       setBundle(data);
+      setRefreshFailed(false);
+      const resolvedCity = `${data.current.city},${data.current.country}`;
+      lastQueryRef.current = "city" in query ? { city: resolvedCity } : query;
+      lastFetchRef.current = Date.now();
       // Remember explicit city searches; a location lookup clears the preference.
-      writeLastCity(
-        "city" in query ? `${data.current.city},${data.current.country}` : null
-      );
+      writeLastCity("city" in query ? resolvedCity : null);
     } catch (err) {
       if (controller.signal.aborted) return;
-      setError(err instanceof Error ? err.message : "Could not load weather data");
+      if (silent) setRefreshFailed(true);
+      else setError(err instanceof Error ? err.message : "Could not load weather data");
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      if (!controller.signal.aborted) {
+        inFlightRef.current = false;
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
+
+  /** Re-fetch what's on screen without the loading skeleton. */
+  const refresh = useCallback(() => {
+    const query = lastQueryRef.current;
+    if (!query || inFlightRef.current) return;
+    setRefreshing(true);
+    fetchInto(query, true);
+  }, [fetchInto]);
 
   /** User-initiated lookup: show the skeleton, clear any old error, then fetch. */
   const load = useCallback(
@@ -118,10 +158,37 @@ export default function Home() {
     return () => requestRef.current?.abort();
   }, [fetchInto, locate]);
 
+  // Keep the data fresh: every 10 minutes while the page is visible, and as soon
+  // as you come back to the tab (or reconnect) if it's older than that.
+  useEffect(() => {
+    const refreshIfStale = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastFetchRef.current < REFRESH_MS) return;
+      refresh();
+    };
+    const id = window.setInterval(refreshIfStale, REFRESH_CHECK_MS);
+    document.addEventListener("visibilitychange", refreshIfStale);
+    window.addEventListener("online", refreshIfStale);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", refreshIfStale);
+      window.removeEventListener("online", refreshIfStale);
+    };
+  }, [refresh]);
+
   const handleCityChange = useCallback((city: string) => load({ city }), [load]);
   const handleGeolocate = useCallback(() => locate(), [locate]);
 
+  const savedRaw = useSyncExternalStore(subscribeSaved, getSavedSnapshot, getSavedServerSnapshot);
+  const savedCities = useMemo(() => parseSaved(savedRaw), [savedRaw]);
+
   const weather = bundle?.current ?? null;
+  const currentCityId = weather ? `${weather.city},${weather.country}` : null;
+  const isSaved =
+    currentCityId !== null && savedCities.some((c) => cityKey(c) === cityKey(currentCityId));
+  const handleToggleSave = useCallback(() => {
+    if (currentCityId) toggleSaved(currentCityId);
+  }, [currentCityId]);
   // The observation time (minutes old at most) gives the location's current date.
   const dateLabel = weather ? formatLocalDate(weather.dt, weather.timezoneOffset) : "";
 
@@ -141,15 +208,25 @@ export default function Home() {
               onCityChange={handleCityChange}
               onGeolocate={handleGeolocate}
               isLocating={isLocating}
+              isSaved={isSaved}
+              canSave={savedCities.length < MAX_SAVED_CITIES}
+              onToggleSave={handleToggleSave}
             />
             <ThemeToggle />
           </div>
-          <p className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase min-h-4">
-            {dateLabel}
-            {bundle?.mock && (
-              <span className="ml-3 text-[#FF3030]">· Demo data (no API key)</span>
+          <div className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase min-h-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>{dateLabel}</span>
+            {weather && !loading && (
+              <UpdatedAgo
+                observedAt={weather.dt}
+                refreshing={refreshing}
+                failed={refreshFailed}
+                onRefresh={refresh}
+              />
             )}
-          </p>
+            {bundle?.mock && <span className="text-[#FF3030]">Demo data (no API key)</span>}
+          </div>
+          <SavedCities cities={savedCities} current={currentCityId} onSelect={handleCityChange} />
         </motion.div>
 
         {/* Error banner */}
@@ -234,6 +311,7 @@ export default function Home() {
                 {/* Direct grid child: align-self:stretch fills the row height set by the left column */}
                 <WeeklyForecast
                   data={bundle.daily}
+                  timezoneOffset={weather.timezoneOffset}
                   className="order-4 lg:col-start-2 lg:row-start-3"
                 />
 

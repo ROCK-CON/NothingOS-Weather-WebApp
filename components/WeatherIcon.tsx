@@ -1,9 +1,12 @@
 "use client";
 
+import { useId } from "react";
 import { type WeatherCondition } from "@/lib/weather";
 
 interface WeatherIconProps {
   condition: WeatherCondition;
+  /** Show the night variant (moon) for clear and partly-cloudy skies. */
+  night?: boolean;
   size?: number;
   className?: string;
 }
@@ -153,6 +156,50 @@ function DrizzleIcon({ size }: { size: number }) {
   );
 }
 
+// Crescent: a full disc with an offset disc masked out. Each instance gets its
+// own mask id so icons never depend on another (possibly unmounted) icon's mask.
+function Moon({ cx, cy, r, opacity }: { cx: number; cy: number; r: number; opacity: number }) {
+  // useId can contain characters that are awkward inside url(#...); keep it plain.
+  const maskId = `moon${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  return (
+    <>
+      <mask id={maskId}>
+        <rect width="64" height="64" fill="white" />
+        <circle cx={cx + r * 0.55} cy={cy - r * 0.35} r={r * 0.85} fill="black" />
+      </mask>
+      <circle cx={cx} cy={cy} r={r} fill="currentColor" opacity={opacity} mask={`url(#${maskId})`} />
+    </>
+  );
+}
+
+function MoonIcon({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+      <Moon cx={30} cy={34} r={18} opacity={0.9} />
+      <circle cx="50" cy="14" r="1.6" fill="currentColor" opacity="0.6" />
+      <circle cx="44" cy="26" r="1.1" fill="currentColor" opacity="0.45" />
+    </svg>
+  );
+}
+
+function PartlyCloudyNightIcon({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+      <Moon cx={22} cy={22} r={12} opacity={0.8} />
+      <path
+        d="M46 46H26a9 9 0 010-18 9.03 9.03 0 018.46 5.94A7.2 7.2 0 1146 46z"
+        fill="currentColor"
+        opacity="0.9"
+      />
+    </svg>
+  );
+}
+
+const nightIconMap: Partial<Record<WeatherCondition, React.FC<{ size: number }>>> = {
+  clear: MoonIcon,
+  "partly-cloudy": PartlyCloudyNightIcon,
+};
+
 const iconMap: Record<WeatherCondition, React.FC<{ size: number }>> = {
   clear: SunIcon,
   cloudy: CloudIcon,
@@ -166,10 +213,11 @@ const iconMap: Record<WeatherCondition, React.FC<{ size: number }>> = {
 
 export default function WeatherIcon({
   condition,
+  night = false,
   size = 48,
   className = "",
 }: WeatherIconProps) {
-  const Icon = iconMap[condition] ?? PartlyCloudyIcon;
+  const Icon = (night && nightIconMap[condition]) || iconMap[condition] || PartlyCloudyIcon;
   return (
     <div className={`flex items-center justify-center text-black dark:text-white ${className}`}>
       <Icon size={size} />

@@ -169,9 +169,12 @@ const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 
 export function WindCard({
   windSpeed,
+  windGust,
   windDeg,
 }: {
   windSpeed: number;
+  /** km/h, or null when not reported — the line is hidden rather than shown as 0. */
+  windGust: number | null;
   windDeg: number;
 }) {
   // Convert meteorological wind direction (where wind comes FROM) to needle pointing TO
@@ -277,6 +280,15 @@ export function WindCard({
           <p className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs mt-1">
             {dirLabel}
           </p>
+          {windGust !== null && (
+            <p className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs mt-1">
+              Gusts{" "}
+              <span className={windGust >= 60 ? "text-[#FF3030]" : "text-black dark:text-white"}>
+                {windGust}
+              </span>{" "}
+              km/h
+            </p>
+          )}
         </div>
       </div>
     </InfoCard>
@@ -614,7 +626,7 @@ export function WeatherDetailsCards({
   return (
     <div className={`flex flex-col gap-4 lg:h-full ${className}`}>
       <div className="grid grid-cols-2 gap-4">
-        <WindCard windSpeed={data.windSpeed} windDeg={data.windDeg} />
+        <WindCard windSpeed={data.windSpeed} windGust={data.windGust} windDeg={data.windDeg} />
         <HumidityCard humidity={data.humidity} />
       </div>
       <div className="grid grid-cols-2 gap-4">

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import WeatherIcon from "./WeatherIcon";
-import type { WeatherData } from "@/lib/weather";
+import { isNightIcon, type WeatherData } from "@/lib/weather";
 
 interface WeatherCardProps {
   data: WeatherData;
@@ -35,7 +35,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <WeatherIcon condition={data.condition} size={112} />
+          <WeatherIcon condition={data.condition} night={isNightIcon(data.icon)} size={112} />
         </motion.div>
       </div>
 

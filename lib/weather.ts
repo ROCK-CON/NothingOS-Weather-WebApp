@@ -25,6 +25,8 @@ export interface WeatherData {
   humidity: number;
   /** km/h */
   windSpeed: number;
+  /** km/h, or null when OpenWeatherMap doesn't report gusts (common in light winds). */
+  windGust: number | null;
   windDeg: number;
   /** metres */
   visibility: number;
@@ -49,6 +51,14 @@ export interface HourlyForecastItem {
   description: string;
   /** Chance of precipitation, 0–100. */
   precipitation: number;
+  /** Expected rain + snow for this 3-hour block, in mm (0 when none). */
+  amount: number;
+  /** True when most of `amount` is snow. */
+  snow: boolean;
+  /** km/h */
+  windSpeed: number;
+  /** km/h, or null when not reported. */
+  gust: number | null;
 }
 
 export interface DailyForecastItem {
@@ -61,6 +71,12 @@ export interface DailyForecastItem {
   description: string;
   /** Highest chance of precipitation during the day, 0–100. */
   precipitation: number;
+  /** Day's total expected rain + snow, in mm. */
+  amount: number;
+  /** True when most of `amount` is snow. */
+  snow: boolean;
+  /** The day's 3-hourly forecast points (only those still to come for today). */
+  hours: HourlyForecastItem[];
 }
 
 export interface WeatherBundle {
@@ -88,7 +104,7 @@ export interface OwmCurrent {
   visibility?: number;
   coord: { lat: number; lon: number };
   main: { temp: number; feels_like: number; humidity: number; pressure: number };
-  wind?: { speed?: number; deg?: number };
+  wind?: { speed?: number; deg?: number; gust?: number };
   sys: { country?: string; sunrise: number; sunset: number };
   weather: OwmCondition[];
 }
@@ -98,6 +114,9 @@ export interface OwmForecastItem {
   main: { temp: number };
   weather: OwmCondition[];
   pop?: number;
+  wind?: { speed?: number; gust?: number };
+  rain?: { "3h"?: number };
+  snow?: { "3h"?: number };
 }
 
 export interface OwmForecast {
@@ -208,6 +227,54 @@ function toPercent(pop: number | undefined): number {
   return Math.round((pop ?? 0) * 100);
 }
 
+/** m/s → km/h, rounded. */
+function toKmh(ms: number): number {
+  return Math.round(ms * 3.6);
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+/** OpenWeatherMap icon codes end in "n" at night, e.g. "01n". */
+export function isNightIcon(icon: string): boolean {
+  return icon.endsWith("n");
+}
+
+/** "<1 mm", "2.4 mm", "12 mm" — or "" when there's nothing to show. */
+export function formatAmount(mm: number): string {
+  if (!(mm > 0)) return "";
+  if (mm < 1) return "<1 mm";
+  if (mm < 10) return `${mm.toFixed(1)} mm`;
+  return `${Math.round(mm)} mm`;
+}
+
+/**
+ * Gusts are worth calling out when they're both strong and well above the
+ * average wind — otherwise they're just noise in the hourly view.
+ */
+export function isNotableGust(windSpeed: number, gust: number | null): gust is number {
+  return gust !== null && gust >= 30 && gust >= windSpeed * 1.5;
+}
+
+function toHourlyItem(item: OwmForecastItem): HourlyForecastItem {
+  const w = item.weather[0];
+  const rain = item.rain?.["3h"] ?? 0;
+  const snow = item.snow?.["3h"] ?? 0;
+  return {
+    time: item.dt,
+    temperature: Math.round(item.main.temp),
+    condition: mapCondition(w.id),
+    icon: w.icon,
+    description: w.description,
+    precipitation: toPercent(item.pop),
+    amount: round1(rain + snow),
+    snow: snow > rain,
+    windSpeed: toKmh(item.wind?.speed ?? 0),
+    gust: typeof item.wind?.gust === "number" ? toKmh(item.wind.gust) : null,
+  };
+}
+
 /** AQI 1–5 from the Air Pollution API, or null if missing/invalid. */
 export function aqiFromAir(air: OwmAir | null): number | null {
   const aqi = air?.list?.[0]?.main?.aqi;
@@ -224,7 +291,8 @@ export function parseCurrent(data: OwmCurrent, aqi: number | null): WeatherData 
     description: capitalise(w.description),
     condition: mapCondition(w.id),
     humidity: data.main.humidity,
-    windSpeed: Math.round((data.wind?.speed ?? 0) * 3.6), // m/s → km/h
+    windSpeed: toKmh(data.wind?.speed ?? 0),
+    windGust: typeof data.wind?.gust === "number" ? toKmh(data.wind.gust) : null,
     windDeg: data.wind?.deg ?? 0,
     visibility: data.visibility ?? 10000,
     pressure: data.main.pressure,
@@ -248,29 +316,26 @@ export function parseHourly(
   current: WeatherData,
   slots = 8
 ): HourlyForecastItem[] {
-  const upcoming = forecast.list.filter((item) => item.dt > current.dt).slice(0, slots);
+  const upcoming = forecast.list
+    .filter((item) => item.dt > current.dt)
+    .slice(0, slots)
+    .map(toHourlyItem);
+  const next = upcoming[0];
+  // "Now" shows current conditions; rain chance and amount come from the next
+  // 3-hour block, since there's no "current" precipitation forecast.
   const now: HourlyForecastItem = {
     time: current.dt,
     temperature: current.temperature,
     condition: current.condition,
     icon: current.icon,
     description: current.description,
-    precipitation: toPercent(upcoming[0]?.pop),
+    precipitation: next?.precipitation ?? 0,
+    amount: next?.amount ?? 0,
+    snow: next?.snow ?? false,
+    windSpeed: current.windSpeed,
+    gust: current.windGust,
   };
-  return [
-    now,
-    ...upcoming.map((item) => {
-      const w = item.weather[0];
-      return {
-        time: item.dt,
-        temperature: Math.round(item.main.temp),
-        condition: mapCondition(w.id),
-        icon: w.icon,
-        description: w.description,
-        precipitation: toPercent(item.pop),
-      };
-    }),
-  ];
+  return [now, ...upcoming];
 }
 
 /** Group 3-hourly points into calendar days in the location's timezone. */
@@ -305,6 +370,9 @@ export function parseDaily(
         : best
     );
     const w = midday.weather[0];
+    const hours = items.filter((item) => item.dt > current.dt).map(toHourlyItem);
+    const rain = items.reduce((sum, item) => sum + (item.rain?.["3h"] ?? 0), 0);
+    const snow = items.reduce((sum, item) => sum + (item.snow?.["3h"] ?? 0), 0);
 
     days.push({
       date: midday.dt,
@@ -315,6 +383,9 @@ export function parseDaily(
       icon: isToday ? current.icon : w.icon,
       description: isToday ? current.description : w.description,
       precipitation: toPercent(Math.max(...items.map((item) => item.pop ?? 0))),
+      amount: round1(rain + snow),
+      snow: snow > rain,
+      hours,
     });
   }
   return days;

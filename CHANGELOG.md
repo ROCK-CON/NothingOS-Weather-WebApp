@@ -8,6 +8,19 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.10.0] — 2026-11-02
+
+### Added
+- **Auto-refresh** — data refreshes every 10 minutes while the page is open, and straight away when you return to the tab or reconnect if it's older than that. Background refreshes keep the current data on failure and say so, rather than replacing the page with an error
+- **"Updated X min ago"** line under the date, showing the age of the reading; tap it to refresh now
+- **Saved cities** — star the current city to save it (up to 8); saved cities appear as one-tap chips under the date. Stored in this browser only
+- **Rain and snow amounts** — Next 24 Hours shows each block's expected mm under the chance; the 5-day rows show the day's total. Snow is marked with a snowflake. Amounts under 1 mm show as "<1 mm"; nothing is shown when none is expected
+- **Wind gusts** — the Wind card shows gusts (hidden when OpenWeatherMap doesn't report them); the hourly view shows gusts ("G 45") only when they're strong and well above the average wind
+- **Night icons** — moon icons for clear and partly cloudy skies after dark
+- **Tap a day for detail** — each 5-day row expands to show that day's 3-hourly forecast
+
+---
+
 ## [0.9.1] — 2026-11-02
 
 ### Changed

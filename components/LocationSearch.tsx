@@ -8,6 +8,11 @@ interface LocationSearchProps {
   onCityChange: (city: string) => void;
   onGeolocate: () => void;
   isLocating: boolean;
+  /** Whether the current city is in the saved list. */
+  isSaved: boolean;
+  /** False when the saved list is full (and this city isn't in it). */
+  canSave: boolean;
+  onToggleSave: () => void;
 }
 
 export default function LocationSearch({
@@ -15,6 +20,9 @@ export default function LocationSearch({
   onCityChange,
   onGeolocate,
   isLocating,
+  isSaved,
+  canSave,
+  onToggleSave,
 }: LocationSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -83,6 +91,38 @@ export default function LocationSearch({
           </svg>
         </motion.button>
 
+        <div className="flex items-center gap-2">
+        {/* Save / unsave current city */}
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.9 }}
+          onClick={onToggleSave}
+          disabled={!isSaved && !canSave}
+          className="p-2 rounded-xl glass hover:opacity-70 transition-opacity disabled:opacity-30 text-black dark:text-white"
+          aria-pressed={isSaved}
+          aria-label={
+            isSaved
+              ? `Remove ${currentCity} from saved cities`
+              : canSave
+                ? `Save ${currentCity}`
+                : "Saved cities list is full"
+          }
+          title={isSaved ? "Remove from saved" : canSave ? "Save city" : "Saved list is full (8)"}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill={isSaved ? "#FF3030" : "none"}
+            stroke={isSaved ? "#FF3030" : "currentColor"}
+            strokeWidth="2"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
+          </svg>
+        </motion.button>
+
         {/* Geolocate button */}
         <motion.button
           type="button"
@@ -120,6 +160,7 @@ export default function LocationSearch({
             </svg>
           )}
         </motion.button>
+        </div>
       </div>
 
       {/* Search dropdown */}

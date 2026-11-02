@@ -4,14 +4,15 @@ A Nothing OS–inspired weather web application built with Next.js 16. Minimal m
 
 ## Features
 
+- **Always fresh** — Auto-refreshes every 10 minutes and when you return to the tab; "Updated X min ago" shows the reading's age (tap to refresh)
 - **Live digital clock** — 96px monochrome clock with blinking red colon, updates every second; shows the searched location's local time
 - **Current conditions** — Large 96px temperature display with 112px weather icon; "Feels like" and condition description in a clean two-row layout
 - **Sunrise & Sunset card** — Arc SVG showing the sun's current position along its daily path, live daylight duration (`Xh Ym`), and Rise / Set times
-- **Next 24 hours** — Now plus the next eight 3-hour forecast points in a horizontally scrollable glass card; "Now" highlighted with a red accent bar. All times shown in the searched location's timezone
-- **5-day forecast** — Today plus 5 days with temperature range bars scaled to the full period min / max; precipitation indicators
+- **Next 24 hours** — Now plus the next eight 3-hour forecast points: rain chance and amount (mm), snow marker, and gusts when notable; night icons after dark. All times in the searched location's timezone
+- **5-day forecast** — Today plus 5 days with temperature range bars, rain chance and the day's expected rain/snow in mm; tap a day for its 3-hourly breakdown
 - **Temperature Trend graph** — Smooth bezier curve SVG chart inside the forecast card; shaded band between high and low lines, floating temperature labels, peak day highlighted in red
-- **Weather detail cards** — SVG infographic cards: Wind compass, Humidity cylinder, Pressure gauge, Visibility fan lines, and a live Air Quality dot grid (OpenWeatherMap Air Pollution API)
-- **City search** — Search any city, with quick-select suggestions; remembers your last city
+- **Weather detail cards** — SVG infographic cards: Wind compass (with gusts), Humidity cylinder, Pressure gauge, Visibility fan lines, and a live Air Quality dot grid (OpenWeatherMap Air Pollution API)
+- **City search & saved cities** — Search any city; star up to 8 favourites for one-tap switching; remembers your last city
 - **Geolocation** — Auto-loads your local weather on first visit if permission is already granted
 - **Light / Dark mode** — Toggle with smooth transition; dark defaults to `#000000`, light to `#f5f5f5`
 - **Server-side API** — One Route Handler fetches, validates, caches (10 min) and normalises OpenWeatherMap data; the API key never reaches the browser
