@@ -8,6 +8,7 @@ import HourlyForecast from "@/components/HourlyForecast";
 import WeeklyForecast from "@/components/WeeklyForecast";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ThemeToggle from "@/components/ThemeToggle";
+import HelpGuide from "@/components/HelpGuide";
 import DigitalClock from "@/components/DigitalClock";
 import UpdatedAgo from "@/components/UpdatedAgo";
 import SavedCities from "@/components/SavedCities";
@@ -213,7 +214,7 @@ export default function Home() {
           transition={{ duration: 0.4 }}
           className="flex flex-col gap-2"
         >
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2">
             <LocationSearch
               currentCity={weather?.city ?? "—"}
               onCityChange={handleCityChange}
@@ -223,7 +224,10 @@ export default function Home() {
               canSave={savedCities.length < MAX_SAVED_CITIES}
               onToggleSave={handleToggleSave}
             />
-            <ThemeToggle />
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <HelpGuide />
+              <ThemeToggle />
+            </div>
           </div>
           <div className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase min-h-4 flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{dateLabel}</span>

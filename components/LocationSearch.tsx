@@ -48,14 +48,14 @@ export default function LocationSearch({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       {/* Header with location and controls */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between gap-2 mb-1">
         <motion.button
           type="button"
           whileTap={{ scale: 0.97 }}
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 group"
+          className="flex items-center gap-2 group min-w-0"
           aria-expanded={isOpen}
           aria-controls="city-search"
           aria-label={`Current location: ${currentCity}. Change city`}
@@ -68,12 +68,12 @@ export default function LocationSearch({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="text-[#FF3030]"
+            className="text-[#FF3030] flex-shrink-0"
           >
             <path d="M12 22s-8-6.8-8-13a8 8 0 1116 0c0 6.2-8 13-8 13z" />
             <circle cx="12" cy="9" r="3" />
           </svg>
-          <span className="text-black dark:text-white font-mono text-sm uppercase tracking-widest hover:text-[#555555] dark:hover:text-[#8A8A8A] transition-colors">
+          <span className="truncate text-black dark:text-white font-mono text-sm uppercase tracking-widest hover:text-[#555555] dark:hover:text-[#8A8A8A] transition-colors">
             {currentCity}
           </span>
           <svg
@@ -83,7 +83,7 @@ export default function LocationSearch({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className={`text-[#555555] dark:text-[#8A8A8A] transition-transform duration-200 ${
+            className={`flex-shrink-0 text-[#555555] dark:text-[#8A8A8A] transition-transform duration-200 ${
               isOpen ? "rotate-180" : ""
             }`}
           >
@@ -91,7 +91,7 @@ export default function LocationSearch({
           </svg>
         </motion.button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
         {/* Save / unsave current city */}
         <motion.button
           type="button"

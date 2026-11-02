@@ -8,6 +8,14 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.11.0] — 2026-11-02
+
+### Added
+- **How to use guide** — a "?" button in the header opens a short guide: a bottom sheet on phones, a centred panel on larger screens. Each line starts with the same icon used on the page, so it doubles as a key. Closes with ×, Esc, or a tap outside. Content lives in `components/HelpGuide.tsx`
+
+### Changed
+- Long city names now truncate with "…" so the header buttons always fit on narrow phones
+
 ## [0.10.1] — 2026-11-02
 
 ### Fixed
