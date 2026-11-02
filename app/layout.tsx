@@ -13,21 +13,25 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for the Open Graph image URL that Next generates from app/opengraph-image.png.
+  metadataBase: new URL("https://weather.rockley.au"),
   title: "Nothing Weather",
-  description: "A Nothing OS inspired weather application",
+  description: "A minimal, Nothing OS inspired weather app",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Nothing Weather",
   },
-  icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icons/icon-192x192.png", type: "image/png", sizes: "192x192" },
-    ],
-    apple: "/icons/icon-192x192.png",
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Nothing Weather",
+    title: "Nothing Weather",
+    description: "A minimal, Nothing OS inspired weather app",
   },
+  twitter: { card: "summary_large_image" },
+  // Icons come from app/icon.svg, app/favicon.ico and app/apple-icon.png (Next file conventions).
 };
 
 export const viewport: Viewport = {

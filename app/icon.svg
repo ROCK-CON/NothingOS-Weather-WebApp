@@ -1,11 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Black background, slight rounding -->
-  <rect width="32" height="32" rx="5" fill="#0a0a0a"/>
-  <!-- Red sun dot — top right, peeking above cloud -->
-  <circle cx="21" cy="10" r="4.5" fill="#FF3030"/>
-  <!-- White cloud — overlapping circles + flat-bottom fill -->
-  <circle cx="9"  cy="22" r="4"   fill="white"/>
-  <circle cx="17" cy="19" r="5.5" fill="white"/>
-  <circle cx="23" cy="22" r="3.5" fill="white"/>
-  <rect   x="5"   y="22"  width="22" height="5" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Nothing Weather</title>
+  <desc id="desc">A minimal white cloud and red dotted sun on a charcoal rounded square.</desc>
+  <rect width="128" height="128" rx="28" fill="#111111"/>
+  <!-- Dot-matrix sun, partially obscured by the cloud -->
+  <g fill="#E53935">
+    <circle cx="85" cy="20" r="3.5"/>
+    <circle cx="99" cy="24" r="3.5"/>
+    <circle cx="110" cy="35" r="3.5"/>
+    <circle cx="114" cy="49" r="3.5"/>
+    <circle cx="110" cy="63" r="3.5"/>
+    <circle cx="57" cy="35" r="3.5"/>
+    <circle cx="71" cy="24" r="3.5"/>
+  </g>
+  <circle cx="85" cy="49" r="17" fill="none" stroke="#E53935" stroke-width="6"/>
+  <!-- Cloud and sun use identical 6-unit stroke widths -->
+  <!-- Foreground cloud, constructed with a single clean continuous contour -->
+  <path d="M38 91H91C103 91 111 83 111 72C111 61 103 54 93 53C88 42 77 36 66 39C56 41 49 49 47 58C44 57 41 57 38 57C27 57 18 65 18 76C18 85 26 91 38 91Z" fill="#111111" stroke="#F4F4F4" stroke-width="6" stroke-linejoin="round"/>
+  <!-- Signature Nothing-style indicator dots -->
+  <g fill="#F4F4F4">
+    <circle cx="48" cy="75" r="3"/>
+    <circle cx="60" cy="75" r="3"/>
+    <circle cx="72" cy="75" r="3"/>
+  </g>
 </svg>

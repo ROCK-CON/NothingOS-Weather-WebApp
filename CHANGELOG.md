@@ -8,6 +8,15 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.11.1] — 2026-11-02
+
+### Added
+- **New app icon** — white cloud with a red dot-matrix sun, used for the browser tab (`app/icon.svg` + `app/favicon.ico`), iPhone home screen (`app/apple-icon.png`) and Android/installed app (192, 512 and a maskable 512 in `public/icons/`)
+- **Link preview** — `app/opengraph-image.png` (1200×630): the icon alone on the site's dot-grid background, no text. Open Graph and Twitter card tags now set, with `metadataBase` = https://weather.rockley.au
+
+### Removed
+- Placeholder 70-byte icons and the unused `public/icons/icon.svg`
+
 ## [0.11.0] — 2026-11-02
 
 ### Added
