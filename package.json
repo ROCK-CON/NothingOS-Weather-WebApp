@@ -1,6 +1,6 @@
 {
   "name": "nothing-weather",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/*.test.ts"
+    "test": "node --test test/*.test.ts",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "framer-motion": "^14.9.0",
@@ -24,6 +25,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.3",
     "postcss": "^8.5.32",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3"
   },

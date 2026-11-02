@@ -8,6 +8,11 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.11.2] — 2026-11-02
+
+### Added
+- `npm run icons` (`scripts/generate-icons.mjs`) regenerates every icon and the link-preview image from `assets/icon-source.svg`; pass a new SVG path to swap the design. `sharp` added as a dev dependency
+
 ## [0.11.1] — 2026-11-02
 
 ### Added

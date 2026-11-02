@@ -79,6 +79,17 @@ npm run typecheck
 
 Without `WEATHER_API_KEY` a production deployment shows "Weather service is not configured" rather than fake data.
 
+## App Icon
+
+All icons and the link-preview image are generated from one file, `assets/icon-source.svg`:
+
+```bash
+npm run icons                          # regenerate from assets/icon-source.svg
+npm run icons -- path/to/new-icon.svg  # use a new design (saved as the new source)
+```
+
+This writes `app/icon.svg`, `app/favicon.ico`, `app/apple-icon.png`, `app/opengraph-image.png` (icon only on the dot-grid background) and the Android icons in `public/icons/`. Commit the results — Next.js picks them up automatically. The source needs a 128×128 viewBox with the background drawn as `<rect width="128" height="128" rx="28" fill="#111111"/>`.
+
 ## Project Structure
 
 ```
