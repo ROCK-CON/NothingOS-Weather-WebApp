@@ -4,6 +4,7 @@ A Nothing OS–inspired weather web application built with Next.js 16. Minimal m
 
 ## Features
 
+- **Privacy-friendly analytics** — Vercel Web Analytics, cookieless, no consent banner needed
 - **How to use guide** — "?" in the header opens a short key to every icon and feature
 - **Always fresh** — Auto-refreshes every 10 minutes and when you return to the tab; "Checked … · reading HH:MM" shows when it last checked and when the reading was taken (tap to refresh)
 - **Live digital clock** — 96px monochrome clock with blinking red colon, updates every second; shows the searched location's local time

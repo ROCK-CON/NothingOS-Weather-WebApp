@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Mono } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 // Self-hosted at build time by next/font: no runtime request to Google, no font flash.
@@ -57,6 +58,8 @@ export default function RootLayout({
           {THEME_SCRIPT}
         </Script>
         {children}
+        {/* Vercel Web Analytics: cookieless page views, served from this domain (CSP 'self'). */}
+        <Analytics />
       </body>
     </html>
   );

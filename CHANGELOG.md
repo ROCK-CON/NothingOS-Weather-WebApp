@@ -8,6 +8,11 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.12.0] — 2026-11-02
+
+### Added
+- **Vercel Web Analytics** (`@vercel/analytics`) — cookieless page-view analytics (visitors, top pages, referrers, country/device). Script and beacon are same-origin, so the existing CSP is unchanged. Only collects on Vercel deployments once Analytics is enabled for the project
+
 ## [0.11.2] — 2026-11-02
 
 ### Added

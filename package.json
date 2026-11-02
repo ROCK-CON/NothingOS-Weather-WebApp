@@ -1,6 +1,6 @@
 {
   "name": "nothing-weather",
-  "version": "0.11.2",
+  "version": "0.12.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,6 +12,7 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@vercel/analytics": "2.0.1",
     "framer-motion": "^14.9.0",
     "next": "^16.4.3",
     "react": "^19.3.1",
