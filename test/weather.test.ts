@@ -3,7 +3,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   aqiFromAir,
+  daysFromNow,
   formatAmount,
+  formatLocalDate,
   formatLocalTime,
   isNightIcon,
   isNotableGust,
@@ -67,6 +69,11 @@ test("formatLocalTime uses the location's timezone, and midnight is 00 not 24", 
   assert.equal(formatLocalTime(utcMidnight, 0, false), "00");
 });
 
+test("formatLocalDate uses the location's calendar day", () => {
+  assert.equal(formatLocalDate(NOW, TOKYO), "Tuesday 3 November"); // still Mon 2 Nov in UTC
+  assert.equal(formatLocalDate(NOW, 0), "Monday 2 November");
+});
+
 test("parseCurrent converts units and keeps a null AQI", () => {
   const data = parseCurrent(current(), null);
   assert.equal(data.temperature, 15);
@@ -119,6 +126,38 @@ test("parseDaily does not label tomorrow as Today late in the evening", () => {
   const daily = parseDaily({ list }, cur);
   assert.notEqual(daily[0].dayName, "Today");
   assert.equal(daily[0].dayName, "Tue");
+});
+
+test("daysFromNow leaves fresh data alone", () => {
+  const daily = parseDaily(forecast(), parseCurrent(current(), 1));
+  const days = daysFromNow(daily, NOW, TOKYO);
+  assert.deepEqual(days.map((d) => d.dayName), daily.map((d) => d.dayName));
+  assert.deepEqual(days.map((d) => d.hours), daily.map((d) => d.hours));
+});
+
+test("daysFromNow fixes a day-old cached response (no 'Today' followed by today's name)", () => {
+  // Data from Tue 3 Nov, viewed on Wed 4 Nov: without this it reads "Today Wed Thu…".
+  const daily = parseDaily(forecast(), parseCurrent(current(), 1));
+  assert.deepEqual(daily.slice(0, 3).map((d) => d.dayName), ["Today", "Wed", "Thu"]);
+
+  const days = daysFromNow(daily, NOW + 24 * HOUR, TOKYO);
+  assert.deepEqual(days.slice(0, 3).map((d) => d.dayName), ["Today", "Thu", "Fri"]);
+  assert.equal(days.length, daily.length - 1);
+  assert.ok(days.every((d) => d.hours.every((h) => h.time > NOW + 24 * HOUR)));
+});
+
+test("daysFromNow rolls over exactly at the location's midnight", () => {
+  const daily = parseDaily(forecast(), parseCurrent(current(), 1));
+  const midnight = Date.UTC(2026, 10, 3, 15, 0, 0) / 1000; // 00:00 Wed 4 Nov in Tokyo
+
+  assert.deepEqual(
+    daysFromNow(daily, midnight - 60, TOKYO).slice(0, 2).map((d) => d.dayName),
+    ["Today", "Wed"]
+  );
+  assert.deepEqual(
+    daysFromNow(daily, midnight, TOKYO).slice(0, 2).map((d) => d.dayName),
+    ["Today", "Thu"]
+  );
 });
 
 test("parseWeatherQuery validates and normalises input", () => {

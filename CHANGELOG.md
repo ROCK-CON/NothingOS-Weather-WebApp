@@ -8,6 +8,15 @@ All notable changes to Nothing Weather are documented here.
 
 ---
 
+## [0.12.1] — 2026-11-06
+
+### Fixed
+- **5-day forecast could list today twice** (e.g. "Today, Fri, Sat" on a Friday) when old data was served. "Today" came from the reading's own date, so a reading from yesterday made yesterday "Today". Days are now labelled against the real clock when displayed, and days already over are dropped, including on a page left open past midnight
+- **Header date could show yesterday** for the same reason. It now comes from the real clock in the location's timezone
+
+### Changed
+- Removed the Next.js data cache on OpenWeatherMap calls, which could return a copy of any age to the first visitor after a quiet period. The CDN is now the only server cache: 10 minutes, plus at most 60 seconds stale (was 10 minutes)
+
 ## [0.12.0] — 2026-11-02
 
 ### Added

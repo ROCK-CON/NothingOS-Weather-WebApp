@@ -15,6 +15,8 @@ import { mockBundle } from "@/lib/mock-weather";
 const OWM_BASE = "https://api.openweathermap.org";
 /** Weather changes slowly; caching for 10 minutes keeps us well inside the free-tier quota. */
 const CACHE_SECONDS = 600;
+/** How long the CDN may serve an expired response while it fetches a new one. */
+const STALE_SECONDS = 60;
 const UPSTREAM_TIMEOUT_MS = 8000;
 
 class UpstreamError extends Error {
@@ -30,8 +32,11 @@ async function owm<T>(path: string, params: Record<string, string>, apiKey: stri
   for (const [key, value] of Object.entries({ ...params, units: "metric", appid: apiKey })) {
     url.searchParams.set(key, value);
   }
+  // The CDN (see `json` below) is the only cache. Next's data cache must stay off:
+  // past its revalidate time it still returns the old copy, however old, so the
+  // first visitor of the day could be served yesterday's weather.
   const res = await fetch(url, {
-    next: { revalidate: CACHE_SECONDS },
+    cache: "no-store",
     signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   });
   if (!res.ok) throw new UpstreamError(res.status);
@@ -43,7 +48,7 @@ function json(body: unknown, status: number, cacheable = false) {
     status,
     headers: {
       "Cache-Control": cacheable
-        ? `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=${CACHE_SECONDS}`
+        ? `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=${STALE_SECONDS}`
         : "no-store",
     },
   });

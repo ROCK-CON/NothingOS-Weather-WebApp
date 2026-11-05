@@ -390,3 +390,27 @@ export function parseDaily(
   }
   return days;
 }
+
+/**
+ * Line the days up with the real clock. Forecast data can be minutes old (the
+ * CDN cache) or a page can sit open past midnight, so "Today" is decided at
+ * display time: days already over are dropped, labels are recalculated, and
+ * forecast points already in the past are removed.
+ */
+export function daysFromNow(
+  daily: DailyForecastItem[],
+  nowSec: number,
+  offsetSec: number
+): DailyForecastItem[] {
+  const todayKey = localDayKey(nowSec, offsetSec);
+  return daily
+    .filter((day) => localDayKey(day.date, offsetSec) >= todayKey)
+    .map((day) => ({
+      ...day,
+      dayName:
+        localDayKey(day.date, offsetSec) === todayKey
+          ? "Today"
+          : DAY_NAMES[toLocalDate(day.date, offsetSec).getUTCDay()],
+      hours: day.hours.filter((hour) => hour.time > nowSec),
+    }));
+}

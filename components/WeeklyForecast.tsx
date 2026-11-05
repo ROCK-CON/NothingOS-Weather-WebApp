@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import WeatherIcon from "./WeatherIcon";
 import { DropIcon, ForecastSlot, SnowflakeIcon } from "./HourlyForecast";
 import {
+  daysFromNow,
   formatAmount,
   formatLocalTime,
   isNightIcon,
   type DailyForecastItem,
 } from "@/lib/weather";
+import { useNowSeconds } from "@/lib/use-now";
 
 interface WeeklyForecastProps {
   data: DailyForecastItem[];
@@ -370,7 +372,11 @@ function DayRow({
 // ─── Weekly Forecast Card ─────────────────────────────────────────────────────
 
 export default function WeeklyForecast({ data, timezoneOffset, className = "" }: WeeklyForecastProps) {
-  const days    = data.slice(0, 6); // Today + 5 days
+  const nowSec  = useNowSeconds();
+  const days    = useMemo(
+    () => daysFromNow(data, nowSec, timezoneOffset).slice(0, 6), // Today + 5 days
+    [data, nowSec, timezoneOffset]
+  );
   const maxTemp = Math.max(...days.map((d) => d.high));
   const minTemp = Math.min(...days.map((d) => d.low));
   // One day open at a time; tapping it again closes it.

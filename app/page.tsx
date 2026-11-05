@@ -10,10 +10,11 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ThemeToggle from "@/components/ThemeToggle";
 import HelpGuide from "@/components/HelpGuide";
 import DigitalClock from "@/components/DigitalClock";
+import CurrentDate from "@/components/CurrentDate";
 import UpdatedAgo from "@/components/UpdatedAgo";
 import SavedCities from "@/components/SavedCities";
 import { SunriseSunsetCard, WeatherDetailsCards } from "@/components/WeatherInfoCards";
-import { formatLocalDate, type WeatherBundle, type WeatherQuery } from "@/lib/weather";
+import type { WeatherBundle, WeatherQuery } from "@/lib/weather";
 import { fetchWeather } from "@/lib/weather-client";
 import {
   cityKey,
@@ -201,8 +202,6 @@ export default function Home() {
   const handleToggleSave = useCallback(() => {
     if (currentCityId) toggleSaved(currentCityId);
   }, [currentCityId]);
-  // The observation time (minutes old at most) gives the location's current date.
-  const dateLabel = weather ? formatLocalDate(weather.dt, weather.timezoneOffset) : "";
 
   return (
     <main className="min-h-screen bg-[#f5f5f5] dark:bg-black dot-matrix transition-colors duration-300">
@@ -230,7 +229,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-[#555555] dark:text-[#8A8A8A] font-mono text-xs tracking-widest uppercase min-h-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>{dateLabel}</span>
+            <span>{weather && <CurrentDate timezoneOffset={weather.timezoneOffset} />}</span>
             {weather && !loading && checkedAt !== null && (
               <UpdatedAgo
                 checkedAt={checkedAt}
